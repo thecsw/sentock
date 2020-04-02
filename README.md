@@ -1,0 +1,2 @@
+# sentock
+Sentimental Stocks
