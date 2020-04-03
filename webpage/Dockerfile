@@ -1,7 +1,8 @@
 FROM nginx
+RUN apt update && apt upgrade
+RUN apt install curl -y
 WORKDIR /var/www
 COPY front .
-RUN ls
 # WORKDIR /var/www/docs-frontend
 # COPY --from=dev /code/docs-frontend .
 # COPY docs-backend /var/www/docs-backend
