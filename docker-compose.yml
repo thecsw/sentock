@@ -14,6 +14,8 @@ services:
     flask_api:
         build: ./flask_api
         restart: unless-stopped
+        ports:
+            - 3000:3000
     twitter_polling:
         build: ./twitter
         restart: "no"
