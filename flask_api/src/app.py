@@ -10,7 +10,7 @@ app = Flask(__name__)
 #else that the webpage is going to need for mvp
 
 #webpage sends {"stock_name":"<stockname>"}
-@app.route('/', methods=["GET"])
+@app.route('/api/', methods=["GET"])
 def hello_world():
     raw_data = request.data
     stock_name = json.loads(raw_data)['stock_name']
