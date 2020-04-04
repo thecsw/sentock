@@ -5,12 +5,12 @@ import json
 
 app = Flask(__name__)
 
-#this is where the webpage is going to pull from. It's going 
+#this is where the webpage is going to pull from. It's going
 #to always pull from here for data. I can't think of anything
 #else that the webpage is going to need for mvp
 
 #webpage sends {"stock_name":"<stockname>"}
-@app.route('/', methods=["POST"])
+@app.route('/api/', methods=["GET"])
 def hello_world():
     raw_data = request.data
     stock_name = json.loads(raw_data)['stock_name']
