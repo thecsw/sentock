@@ -16,30 +16,9 @@
         </nav>
         <div id="app" class="container">
             <div class="row">
-
-                <div class="col s12 m6 l4">
-                    <div class="hoverable card grey darken-4">
-                        <a class="modal-trigger white-text" href="#example-modal">
-                            <div class="card-image">
-                                <canvas id="example-preview"></canvas>
-                            </div>
-                            <div class="card-content">
-                                <span class="card-title">Company Name</span>
-                                <hr/>
-                                <p>
-                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sollicitudin dolor scelerisque, hendrerit est a, elementum metus. Nulla cursus nulla eget leo iaculis elementum nec at mauris.
-                                </p>
-                            </div>
-                        </a>
-                    </div>
-                    <div id="example-modal" class="modal grey darken-4">
-                        <div class="modal-content white-text">
-                            <h4>Company Name</h4>
-                            <canvas id="example-full"></canvas>
-                        </div>
-                    </div>
+                <div v-for="graph in graphs" :key="graph.html">
+                    <div v-html="graph.html"></div>
                 </div>
-
             </div>
         </div>
         <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js" integrity="sha384-+jvb+jCJ37FkNjPyYLI3KJzQeD8pPFXUra3B/QJFqQ3txYrUPIP1eOfxK4h3cKZP" crossorigin="anonymous"></script>
