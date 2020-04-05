@@ -10,7 +10,9 @@ let app = new Vue({
         graphs: [
             new StockGraph('McDonald\'s', 'MCD'),
             new StockGraph('Chipotle', 'CMG'),
-            new StockGraph('Microsoft', 'MSFT')
+            new StockGraph('Microsoft', 'MSFT'),
+            new StockGraph('Disney', 'DIS'),
+            new StockGraph('FedEx', 'FDX')
         ]
     }
 })
