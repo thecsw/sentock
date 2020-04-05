@@ -88,7 +88,7 @@ export class StockGraph {
                         fillColor: `rgb(${color.r}, ${color.g}, ${color.b})`
                     },
                     {
-                        label: 'sentiment Rating',
+                        label: 'Sentiment Rating',
                         data: this.sentimentData,
                         fill: false,
                         borderColor: `rgb(${color.r+100}, ${color.g+100}, ${color.b+100})`,
