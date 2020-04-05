@@ -47,8 +47,7 @@ tweet_data=[]
 #To add a company, add the string name and then..
 companies = ["McDonald\'s", "Chipotle", "Microsoft", "FedEx", "Disney"]  
 # DB initialize them
-for company in companies:
-    db.init_company(conn, company)
+db.init_companies(conn)
 
 #add the latitude, longitude, and radius around the HQ you want to search
 list_of_coords = ["41.8871,-87.6298,100mi", "33.628342,-117.927933,100mi", "47.673988,-122.121513,100mi", "35.117500,-89.971107,100mi", "34.180840,-118.308968,100mi"] 
