@@ -6,7 +6,7 @@ export class StockGraph {
     // Member variables
     id
     name
-    numDays = 100
+    numDays = 30
 
     /**
      * Creates a stock graph
