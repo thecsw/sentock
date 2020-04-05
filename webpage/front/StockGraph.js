@@ -6,8 +6,6 @@ export class StockGraph {
     // Member variables
     id
     name
-    sentimentData
-    stockData
 
     /**
      * Creates a stock graph
@@ -18,32 +16,38 @@ export class StockGraph {
         this.id = id
         this.name = name
 
-        this.sentimentData = new Array(100).fill(0).map(()=>Math.random()*2-1)
+        // Make API call
+        let stocks = this.apiCall(id).then(this.json2stocks)
 
-        //load in data
-        fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${id}&apikey=VF5PZ9DBDNDKYYSN`)
-        .then(res => res.json())
-        .then(function(json) {
-            let data = []
-            for(let day in json["Time Series (Daily)"]) {
-                data.push(json["Time Series (Daily)"][day]["4. close"])
-            }
-            return data
-        })
-        .then(function(data) {
-            this.stockData = data
+        // Scale sentiment data and draw
+        stocks.then((stock => {
+            const stockNumbers = stock.map(n => parseInt(n))
+            const maxStock = stockNumbers.reduce((a, b) => a > b ? a : b)
+            const minStock = stockNumbers.reduce((a, b) => a < b ? a : b)
+            const sentiment = new Array(100).fill(0).map(()=>Math.random()*2-1).map(n => n * (maxStock - minStock) / 2 + (maxStock + minStock) / 2)
 
-            let stockNumbers = this.stockData.map(n => parseInt(n))
-            let maxStock = stockNumbers.reduce((a, b) => a > b ? a : b)
-            let minStock = stockNumbers.reduce((a, b) => a < b ? a : b)
-
-            this.sentimentData = this.sentimentData.map(n => n * (maxStock - minStock) / 2 + (maxStock + minStock) / 2)
-
-            this.draw()
-        }.bind(this))
+            this.draw(stock, sentiment)
+        }).bind(this))
     }
 
-    draw() {
+    /**
+     * Makes an API call, and returns the json from it
+     * @param {string} symbol Stock trading symbol
+     */
+    apiCall(symbol) {
+        const apiKey = 'VF5PZ9DBDNDKYYSN'
+        const api = 'https://www.alphavantage.co/query?'
+        const url = `${api}function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}`
+
+        return fetch(url).then(res => res.json())
+    }
+
+    /**
+     * Draws the graphs in their respective context
+     * @param {[number]} stock
+     * @param {[number]} sentiment
+     */
+    draw(stock, sentiment) {
         //generate colors
         const color = {
             r: Math.random()*100+50,
@@ -66,7 +70,7 @@ export class StockGraph {
                 datasets: [
                     {
                         label: 'Stock Price',
-                        data: this.stockData,
+                        data: stock,
                         fill: false,
                         borderColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                         lineTension: 0.3,
@@ -75,7 +79,7 @@ export class StockGraph {
                     },
                     {
                         label: 'Sentiment Rating',
-                        data: this.sentimentData,
+                        data: sentiment,
                         fill: false,
                         borderColor: `rgb(${color.r+100}, ${color.g+100}, ${color.b+100})`,
                         lineTension: 0.3,
@@ -89,5 +93,21 @@ export class StockGraph {
         //draw on canvas
         new Chart(document.getElementById(`${this.id}-preview`), chart)
         new Chart(document.getElementById(`${this.id}-full`), chart)
+    }
+
+    /**
+     * Converts the JSON object from the API into a list of stock data
+     * @param {object} json The JSON object to be converted
+     */
+    json2stocks(json) {
+        const daysKey = 'Time Series (Daily)'
+        const dataKey = '4. close'
+
+        const days = json[daysKey]
+        let data = []
+
+        for(let day in days) data.push(days[day][dataKey])
+
+        return data
     }
 }

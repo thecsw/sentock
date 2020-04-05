@@ -24,7 +24,7 @@
         <!-- Graphs -->
         <div id="graphs" class="container">
             <div class="row">
-                <div v-for="graph in graphs" :key="graph">
+                <div v-for="graph in graphs" :key="graph.symbol">
                     <div class="col s12 m6 xl4">
                         <div class="hoverable card grey darken-4">
                             <a class="modal-trigger white-text" v-bind:href="`#${graph.id}-modal`">
