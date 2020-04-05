@@ -9,20 +9,18 @@ app = Flask(__name__)
 #to always pull from here for data. I can't think of anything
 #else that the webpage is going to need for mvp
 
-#webpage sends {"stock_name":"<stockname>"}
-@app.route('/api/', methods=["POST"])
-def hello_world():
+#webpage asks for all stocks here
+@app.route('/api/stocks', methods=["POST"])
+def get_stocks():
     raw_data = request.data
     stock_name = json.loads(raw_data)['stock_name']
     print(stock_name, file=sys.stderr)
-
     return "hello there"
 
-
+#static page for docs of this
 @app.route('/api/docs', methods=["GET"])
 def serve():
     return render_template('app.html')
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)
