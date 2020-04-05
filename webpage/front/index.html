@@ -24,8 +24,25 @@
         <!-- Graphs -->
         <div id="graphs" class="container">
             <div class="row">
-                <div v-for="graph in graphs" :key="graph.html">
-                    <div v-html="graph.html"></div>
+                <div v-for="graph in graphs" :key="graph">
+                    <div class="col s12 m6 xl4">
+                        <div class="hoverable card grey darken-4">
+                            <a class="modal-trigger white-text" v-bind:href="`#${graph.id}-modal`">
+                                <div class="card-image">
+                                    <canvas v-bind:id="`${graph.id}-preview`"></canvas>
+                                </div>
+                                <div class="card-content">
+                                    <span class="card-title">{{graph.name}}</span>
+                                </div>
+                            </a>
+                        </div>
+                        <div v-bind:id="`${graph.id}-modal`" class="modal grey darken-4">
+                            <div class="modal-content white-text">
+                                <h4>{{graph.name}}</h4>
+                                <canvas v-bind:id="`${graph.id}-full`"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

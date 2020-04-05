@@ -1,38 +1,24 @@
+/**
+ * All the information to create a graph
+ */
 export class StockGraph {
 
-    html
+    // Member variables
     id
     name
     sentimentData
     stockData
 
+    /**
+     * Creates a stock graph
+     * @param {string} name Company name
+     * @param {string} symbol Stock ticker symbol
+     */
     constructor(name, id) {
         this.id = id
         this.name = name
 
         this.sentimentData = new Array(100).fill(0).map(()=>Math.random()*2-1)
-
-        //generate HTML
-        this.html = `
-        <div class="col s12 m6 xl4">
-            <div class="hoverable card grey darken-4">
-                <a class="modal-trigger white-text" href="#${id}-modal">
-                    <div class="card-image">
-                        <canvas id="${id}-preview"></canvas>
-                    </div>
-                    <div class="card-content">
-                        <span class="card-title">${name}</span>
-                    </div>
-                </a>
-            </div>
-            <div id="${id}-modal" class="modal grey darken-4">
-                <div class="modal-content white-text">
-                    <h4>${name}</h4>
-                    <canvas id="${id}-full"></canvas>
-                </div>
-            </div>
-        </div>
-        `
 
         //load in data
         fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${id}&apikey=VF5PZ9DBDNDKYYSN`)
