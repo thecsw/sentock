@@ -14,7 +14,7 @@ export class StockGraph {
 
         //generate HTML
         this.html = `
-        <div class="col s12 m6">
+        <div class="col s12 m6 xl4">
             <div class="hoverable card grey darken-4">
                 <a class="modal-trigger white-text" href="#${id}-modal">
                     <div class="card-image">
