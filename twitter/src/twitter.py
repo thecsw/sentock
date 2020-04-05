@@ -29,7 +29,7 @@ query = 'McDonald\'s&-filter:retweets'
 #number of tweets we want with this query in it
 #we may just want while true and circle through queries and then have
 # to wait it out becuase of rate limiting
-num_of_tweets = 100
+num_of_tweets = 2
 tweets = []
 #for the purposes of not going over older tweets
 past_tweets = []
@@ -78,11 +78,6 @@ for i in range(len(companies)):
 
     tweet_data.append(company_tweets)
 
-for company in company_tweets:
-    for day in company:
-        for tweet in day:
-            print(tweet)
-
 #give this a sentence and it will spit out a dictionary
 #that has different fields. The best one should probably
 #be the compound
@@ -90,7 +85,19 @@ for company in company_tweets:
 #     print(str(ans['compound']))
 analyzer = SentimentIntensityAnalyzer()
 
-sentiment_analysis = []
-for tweet in tweets:
-    sentiment_on_tweet = analyzer.polarity_scores(tweet.text)
-    sentiment_analysis.append(sentiment_on_tweet)
+print(tweet_data[0][0])
+
+sentiment_analysis = {}
+#companies
+for i in range(0,len(tweet_data)):
+    company_sentiment = {}
+    #dates
+    for j in range(7):
+        sentiment_nums = []
+        for tweet in tweet_data[i][j]:
+            sentiment_nums.append(analyzer.polarity_scores(tweet)['compound'])
+        print(sentiment_nums)
+        company_sentiment.update([(date_list[j],sentiment_nums)])
+    sentiment_analysis.update([(companies[i],company_sentiment)])
+
+print(sentiment_analysis)
