@@ -3,12 +3,14 @@ export class StockGraph {
     html
     id
     name
-    positivityData
+    sentimentData
     stockData
 
     constructor(name, id) {
         this.id = id
         this.name = name
+
+        this.sentimentData = new Array(100).fill(0).map(()=>Math.random()*2-1)
 
         //generate HTML
         this.html = `
@@ -43,7 +45,14 @@ export class StockGraph {
             return data
         })
         .then(function(data) {
-            this.stockData = this.positivityData = data
+            this.stockData = data
+
+            let stockNumbers = this.stockData.map(n => parseInt(n))
+            let maxStock = stockNumbers.reduce((a, b) => a > b ? a : b)
+            let minStock = stockNumbers.reduce((a, b) => a < b ? a : b)
+
+            this.sentimentData = this.sentimentData.map(n => n * (maxStock - minStock) / 2 + (maxStock + minStock) / 2)
+
             this.draw()
         }.bind(this))
     }
@@ -79,8 +88,8 @@ export class StockGraph {
                         fillColor: `rgb(${color.r}, ${color.g}, ${color.b})`
                     },
                     {
-                        label: 'Positivity Rating',
-                        data: new Array(100).fill(0).map(()=>Math.random()*2-1),
+                        label: 'sentiment Rating',
+                        data: this.sentimentData,
                         fill: false,
                         borderColor: `rgb(${color.r+100}, ${color.g+100}, ${color.b+100})`,
                         lineTension: 0.3,
