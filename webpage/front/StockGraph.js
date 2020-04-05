@@ -6,6 +6,7 @@ export class StockGraph {
     // Member variables
     id
     name
+    numDays = 100
 
     /**
      * Creates a stock graph
@@ -21,10 +22,12 @@ export class StockGraph {
 
         // Scale sentiment data and draw
         stocks.then((stock => {
-            const stockNumbers = stock.map(n => parseInt(n))
+            const stockNumbers = stock.slice(-this.numDays).map(n => parseInt(n))
             const maxStock = stockNumbers.reduce((a, b) => a > b ? a : b)
             const minStock = stockNumbers.reduce((a, b) => a < b ? a : b)
-            const sentiment = new Array(100).fill(0).map(()=>Math.random()*2-1).map(n => n * (maxStock - minStock) / 2 + (maxStock + minStock) / 2)
+
+            let sentiment = new Array(this.numDays).fill(0).map(()=>Math.random()*2-1)
+            sentiment = sentiment.map(n => n * (maxStock - minStock) / 2 + (maxStock + minStock) / 2)
 
             this.draw(stock, sentiment)
         }).bind(this))
@@ -50,27 +53,20 @@ export class StockGraph {
     draw(stock, sentiment) {
         //generate colors
         const color = {
-            r: Math.random()*100+50,
-            g: Math.random()*100+50,
-            b: Math.random()*100+50
+            r: this.random(50, 150),
+            g: this.random(50, 150),
+            b: this.random(50, 150)
         }
-
-        //get current date
-        let date = new Date
-        date.setDate(date.getDate() - 99)
 
         //construct chart data
         const chart = {
             type: 'line',
             data: {
-                labels: [...Array(100).keys()].map(function(n) {
-                    date.setDate(date.getDate() + 1)
-                    return `${date.getMonth()}/${date.getDate()}/${date.getFullYear()}`
-                }),
+                labels: this.getLabels(this.numDays),
                 datasets: [
                     {
                         label: 'Stock Price',
-                        data: stock,
+                        data: stock.slice(-this.numDays),
                         fill: false,
                         borderColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                         lineTension: 0.3,
@@ -79,7 +75,7 @@ export class StockGraph {
                     },
                     {
                         label: 'Sentiment Rating',
-                        data: sentiment,
+                        data: sentiment.slice(-this.numDays),
                         fill: false,
                         borderColor: `rgb(${color.r+100}, ${color.g+100}, ${color.b+100})`,
                         lineTension: 0.3,
@@ -96,6 +92,20 @@ export class StockGraph {
     }
 
     /**
+     * Generates the list of labels for the last n days
+     * @param {number} n number of days
+     */
+    getLabels(n) {
+        let date = new Date
+        date.setDate(date.getDate() - n)
+
+        return [...Array(n).keys()].map(n => {
+            date.setDate(date.getDate() + 1)
+            return `${date.getMonth()}/${date.getDate()}/${date.getFullYear()}`
+        })
+    }
+
+    /**
      * Converts the JSON object from the API into a list of stock data
      * @param {object} json The JSON object to be converted
      */
@@ -109,5 +119,14 @@ export class StockGraph {
         for(let day in days) data.push(days[day][dataKey])
 
         return data
+    }
+
+    /**
+     * Generate a random number from min to max
+     * @param {number} min minimum possible number
+     * @param {number} max maximum possible number
+     */
+    random(min, max) {
+        return Math.random() * (max - min) + min
     }
 }
