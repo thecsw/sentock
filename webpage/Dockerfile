@@ -1,5 +1,5 @@
 FROM nginx
-RUN apt update && apt upgrade
+RUN apt update -y && apt upgrade -y
 RUN apt install curl -y
 WORKDIR /var/www
 COPY front .

@@ -6,6 +6,9 @@ __pycache__/
 #vim stuff
 *.swp
 
+# emacs stuff
+.saves
+
 # Distribution / packaging
 .Python
 build/

@@ -3,6 +3,8 @@ import tweepy
 import os
 import time
 import datetime
+import psycopg2
+import db
 
 def tweet_in_company_tweets(elt, arr):
     for date in arr:
@@ -12,8 +14,14 @@ def tweet_in_company_tweets(elt, arr):
 
     return False
 
-#get tokens from environment var
+# Initialize the database
+conn = psycopg2.connect(dbname="sentock",
+                        user="sandy",
+                        password="pass",
+                        host="postgres",
+                        port="5432")
 
+#get tokens from environment var
 consumer_token = 'XWYNu0pXy3FujGTFs5Zz2sI3w'
 consumer_secret = 'u4lOvuenKT5rM5fvadgbe9MmRwUTK6NIcf6ZaB1HCRBKYX3lkB'
 access_token = '1245747355397349386-jnDu79yI1J9UEKcFTaG1xV5HcvdZPo'
@@ -38,6 +46,9 @@ tweet_data=[]
 
 #To add a company, add the string name and then..
 companies = ["McDonald\'s", "Chipotle", "Microsoft", "FedEx", "Disney"]  
+# DB initialize them
+for company in companies:
+    db.init_company(conn, company)
 
 #add the latitude, longitude, and radius around the HQ you want to search
 list_of_coords = ["41.8871,-87.6298,100mi", "33.628342,-117.927933,100mi", "47.673988,-122.121513,100mi", "35.117500,-89.971107,100mi", "34.180840,-118.308968,100mi"] 
