@@ -6,11 +6,9 @@ export class StockGraph {
     positivityData
     stockData
 
-    constructor(name, id, stockData, positivityData) {
+    constructor(name, id) {
         this.id = id
         this.name = name
-        this.positivityData = positivityData
-        this.stockData = stockData
 
         //generate HTML
         this.html = `
@@ -33,6 +31,21 @@ export class StockGraph {
             </div>
         </div>
         `
+
+        //load in data
+        fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${id}&apikey=VF5PZ9DBDNDKYYSN`)
+        .then(res => res.json())
+        .then(function(json) {
+            let data = []
+            for(let day in json["Time Series (Daily)"]) {
+                data.push(json["Time Series (Daily)"][day]["4. close"])
+            }
+            return data
+        })
+        .then(function(data) {
+            this.stockData = this.positivityData = data
+            this.draw()
+        }.bind(this))
     }
 
     draw() {
@@ -43,25 +56,35 @@ export class StockGraph {
             b: Math.random()*100+50
         }
 
+        //get current date
+        let date = new Date
+        date.setDate(date.getDate() - 99)
+
         //construct chart data
         const chart = {
             type: 'line',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                labels: [...Array(100).keys()].map(function(n) {
+                    date.setDate(date.getDate() + 1)
+                    return `${date.getMonth()}/${date.getDate()}/${date.getFullYear()}`
+                }),
                 datasets: [
                     {
                         label: 'Stock Price',
                         data: this.stockData,
                         fill: false,
                         borderColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
-                        lineTension: 0.2
+                        lineTension: 0.3,
+                        pointRadius: 0,
+                        fillColor: `rgb(${color.r}, ${color.g}, ${color.b})`
                     },
                     {
                         label: 'Positivity Rating',
-                        data: this.positivityData,
+                        data: new Array(100).fill(0).map(()=>Math.random()*2-1),
                         fill: false,
                         borderColor: `rgb(${color.r+100}, ${color.g+100}, ${color.b+100})`,
-                        lineTension: 0.2
+                        lineTension: 0.3,
+                        pointRadius: 0
                     }
                 ]
             },
