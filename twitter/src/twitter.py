@@ -59,18 +59,18 @@ list_of_coords = ["41.8871,-87.6298,100mi", "33.628342,-117.927933,100mi", "47.6
 #Get the dates we will search for
 base = datetime.datetime.today()
 date_list = [str(base - datetime.timedelta(days=6-x)).split(" ")[0] for x in range(7)]
-print(date_list)
+print(date_list, flush=True)
 
 #look at docs, dunno how to make this work with rate limitting
 for i in range(len(companies)):
     # Quick sleeping for companies
     time.sleep(2)
-    print('Company: ' + companies[i])
+    print('Company: ' + companies[i], flush=True)
     company_tweets = []
     for date in date_list:
         # Sleep about a second between each day
         time.sleep(1)
-        print('Date: ' + date)
+        print('Date: ' + date, flush=True)
         date_tweets = []
         query = companies[i] + '&-filter:retweets'
         while len(date_tweets) < num_of_tweets:
@@ -86,10 +86,10 @@ for i in range(len(companies)):
                             break
                 company_tweets.append(date_tweets)
                 if count == 0:
-                    print("no tweets");
+                    print("no tweets", flush=True)
                     break
                 else:
-                    print("Found " + str(count) + " tweet(s)")
+                    print("Found " + str(count) + " tweet(s)", flush=True)
                     
             except tweepy.TweepError as e:
                 # 900 second sleep is too long
@@ -105,7 +105,7 @@ for i in range(len(companies)):
 #     print(str(ans['compound']))
 analyzer = SentimentIntensityAnalyzer()
 
-print(tweet_data[0][0])
+print(tweet_data[0][0], flush=True)
 
 sentiment_analysis = {}
 #companies
@@ -116,11 +116,11 @@ for i in range(0,len(tweet_data)):
         sentiment_nums = []
         for tweet in tweet_data[i][j]:
             sentiment_nums.append(analyzer.polarity_scores(tweet)['compound'])
-        print(sentiment_nums)
+        print(sentiment_nums, flush=True)
         company_sentiment.update([(date_list[j],sentiment_nums)])
     sentiment_analysis.update([(companies[i],company_sentiment)])
 
-print(sentiment_analysis)
+print(sentiment_analysis, flush=True)
 
 # Start going through companies
 for company in sentiment_analysis:
