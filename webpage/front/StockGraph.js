@@ -1,35 +1,33 @@
+const NUM_DAYS = 30
+
 /**
  * All the information to create a graph
  */
 export class StockGraph {
-
-    // Member variables
-    id
-    name
-    numDays = 30
 
     /**
      * Creates a stock graph
      * @param {string} name Company name
      * @param {string} symbol Stock ticker symbol
      */
-    constructor(name, id) {
-        this.id = id
-        this.name = name
+    constructor(name, symbol) {
+        this.id = symbol
 
         // Make API call
-        let stocks = this.apiCall(id).then(this.json2stocks)
+        let stocks = this.apiCall(symbol).then(this.json2stocks)
 
         // Scale sentiment data and draw
         stocks.then((stock => {
-            const stockNumbers = stock.slice(-this.numDays).map(n => parseInt(n))
+            const stockNumbers = stock.slice(-NUM_DAYS).map(n => parseFloat(n))
             const maxStock = stockNumbers.reduce((a, b) => a > b ? a : b)
             const minStock = stockNumbers.reduce((a, b) => a < b ? a : b)
+            const midStock = (maxStock + minStock) / 2
+            const stockDiff = maxStock - minStock
 
-            let sentiment = new Array(this.numDays).fill(0).map(()=>Math.random()*2-1)
-            sentiment = sentiment.map(n => n * (maxStock - minStock) / 2 + (maxStock + minStock) / 2)
+            let sentiment = new Array(NUM_DAYS).fill(0).map(()=>Math.random()*2-1)
+            sentiment = sentiment.map(n => n * stockDiff / 2 + midStock)
 
-            this.draw(stock, sentiment)
+            this.draw(stock, sentiment, symbol)
         }).bind(this))
     }
 
@@ -47,48 +45,44 @@ export class StockGraph {
 
     /**
      * Draws the graphs in their respective context
-     * @param {[number]} stock
-     * @param {[number]} sentiment
+     * @param {[number]} stock stock data
+     * @param {[number]} sentiment sentiment data
+     * @param {string} symbol The stock trading symbol
      */
-    draw(stock, sentiment) {
-        //generate colors
+    draw(stock, sentiment, symbol) {
+
+        let chart = this.getChart(
+            stock.slice(-NUM_DAYS),
+            sentiment.slice(-NUM_DAYS)
+        )
+
+        //draw on canvas
+        new Chart(document.getElementById(`${symbol}-preview`), chart)
+        new Chart(document.getElementById(`${symbol}-full`), chart)
+    }
+
+    getChart(stock, sentiment) {
+        // Generate colors
         const color = {
             r: this.random(50, 150),
             g: this.random(50, 150),
             b: this.random(50, 150)
         }
 
-        //construct chart data
-        const chart = {
+        // Generate a dataset
+        const dataset = (title, data, color) => ({label: title, data: data, fill: false, borderColor: color, lineTension: 0.3, pointRadius: 0})
+
+        return {
             type: 'line',
             data: {
-                labels: this.getLabels(this.numDays),
+                labels: this.getLabels(NUM_DAYS),
                 datasets: [
-                    {
-                        label: 'Stock Price',
-                        data: stock.slice(-this.numDays),
-                        fill: false,
-                        borderColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
-                        lineTension: 0.3,
-                        pointRadius: 0,
-                        fillColor: `rgb(${color.r}, ${color.g}, ${color.b})`
-                    },
-                    {
-                        label: 'Sentiment Rating',
-                        data: sentiment.slice(-this.numDays),
-                        fill: false,
-                        borderColor: `rgb(${color.r+100}, ${color.g+100}, ${color.b+100})`,
-                        lineTension: 0.3,
-                        pointRadius: 0
-                    }
+                    dataset('Stock Price', stock, `rgb(${color.r}, ${color.g}, ${color.b})`),
+                    dataset('Sentiment Rating', sentiment, `rgb(${color.r+100}, ${color.g+100}, ${color.b+100})`)
                 ]
             },
             options: {}
         }
-
-        //draw on canvas
-        new Chart(document.getElementById(`${this.id}-preview`), chart)
-        new Chart(document.getElementById(`${this.id}-full`), chart)
     }
 
     /**
