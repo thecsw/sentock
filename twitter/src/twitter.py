@@ -5,6 +5,7 @@ import time
 import datetime
 import psycopg2
 import db
+import statistics
 
 def tweet_in_company_tweets(elt, arr):
     for date in arr:
@@ -14,6 +15,9 @@ def tweet_in_company_tweets(elt, arr):
 
     return False
 
+# Sleep for 3 seconds before DB starts accepting
+# connections
+time.sleep(3)
 # Initialize the database
 conn = psycopg2.connect(dbname="sentock",
                         user="sandy",
@@ -37,7 +41,7 @@ query = 'McDonald\'s&-filter:retweets'
 #number of tweets we want with this query in it
 #we may just want while true and circle through queries and then have
 # to wait it out becuase of rate limiting
-num_of_tweets = 2
+num_of_tweets = 10
 tweets = []
 #for the purposes of not going over older tweets
 past_tweets = []
@@ -59,9 +63,13 @@ print(date_list)
 
 #look at docs, dunno how to make this work with rate limitting
 for i in range(len(companies)):
+    # Quick sleeping for companies
+    time.sleep(2)
     print('Company: ' + companies[i])
     company_tweets = []
     for date in date_list:
+        # Sleep about a second between each day
+        time.sleep(1)
         print('Date: ' + date)
         date_tweets = []
         query = companies[i] + '&-filter:retweets'
@@ -84,7 +92,9 @@ for i in range(len(companies)):
                     print("Found " + str(count) + " tweet(s)")
                     
             except tweepy.TweepError as e:
-                time.sleep(900)
+                # 900 second sleep is too long
+                # Changed it to 1
+                time.sleep(1)
 
     tweet_data.append(company_tweets)
 
@@ -111,3 +121,14 @@ for i in range(0,len(tweet_data)):
     sentiment_analysis.update([(companies[i],company_sentiment)])
 
 print(sentiment_analysis)
+
+# Start going through companies
+for company in sentiment_analysis:
+    # Start going through days
+    for day in sentiment_analysis[company]:
+        # Each day will get the average
+        db.add_sentiment(
+            conn,
+            company,
+            day,
+            statistics.mean(sentiment_analysis[company][day]))
