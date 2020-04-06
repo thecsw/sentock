@@ -1,11 +1,13 @@
 import {StockGraph} from './StockGraph.js'
 
-document.addEventListener('DOMContentLoaded', function() {
-    M.Modal.init(document.querySelectorAll('.modal'), {})
-})
+// Initialize modals
+document.addEventListener('DOMContentLoaded',
+    () => M.Modal.init(document.querySelectorAll('.modal'), {})
+)
 
-let app = new Vue({
-    el: '#app',
+// Set up stock graphs
+new Vue({
+    el: '#graphs',
     data: {
         graphs: [
             new StockGraph('McDonald\'s', 'MCD'),
