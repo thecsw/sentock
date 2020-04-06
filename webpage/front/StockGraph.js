@@ -5,19 +5,26 @@ const NUM_DAYS = 30
  */
 export class StockGraph {
 
+    error
+    id
     /**
      * Creates a stock graph
      * @param {string} name Company name
      * @param {string} symbol Stock ticker symbol
      */
-    constructor(name, symbol) {
+    constructor(name, symbol, apiKey) {
+        this.error = false
         this.id = symbol
 
         // Make API call
-        let stocks = this.apiCall(symbol).then(this.json2stocks)
+        let stocks = this.apiCall(symbol, apiKey).then(this.json2stocks)
 
         // Scale sentiment data and draw
         stocks.then((stock => {
+
+            //warn about API key
+            if(stock.length === 0) this.error = true
+
             const stockNumbers = stock.slice(-NUM_DAYS).map(n => parseFloat(n))
             const maxStock = stockNumbers.reduce((a, b) => a > b ? a : b)
             const minStock = stockNumbers.reduce((a, b) => a < b ? a : b)
@@ -35,8 +42,7 @@ export class StockGraph {
      * Makes an API call, and returns the json from it
      * @param {string} symbol Stock trading symbol
      */
-    apiCall(symbol) {
-        const apiKey = 'VF5PZ9DBDNDKYYSN'
+    apiCall(symbol, apiKey) {
         const api = 'https://www.alphavantage.co/query?'
         const url = `${api}function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}`
 

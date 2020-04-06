@@ -23,6 +23,7 @@
 
         <!-- Graphs -->
         <div id="graphs" class="container">
+            <div v-html="getError()"></div>
             <div class="row">
                 <div v-for="graph in graphs" :key="graph.symbol">
                     <div class="col s12 m6 xl4">
