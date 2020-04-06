@@ -7,6 +7,7 @@ export class StockGraph {
 
     error
     id
+    name
     /**
      * Creates a stock graph
      * @param {string} name Company name
@@ -15,6 +16,7 @@ export class StockGraph {
     constructor(name, symbol, apiKey) {
         this.error = false
         this.id = symbol
+        this.name = name
 
         // Make API call
         let stocks = this.apiCall(symbol, apiKey).then(this.json2stocks)
