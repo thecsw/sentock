@@ -78,7 +78,7 @@ export class StockGraph {
         }
 
         // Generate a dataset
-        const dataset = (title, data, color) => ({label: title, data: data, fill: false, borderColor: color, lineTension: 0.3, pointRadius: 0})
+        const dataset = (title, data, color) => ({label: title, data: data, fill: false, borderColor: color, lineTension: 0, pointRadius: 0})
 
         return {
             type: 'line',
