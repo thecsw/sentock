@@ -2,20 +2,33 @@
 from flask import Flask, request, jsonify, render_template
 import sys
 import json
+import db
+import psycopg2
+import time
 
 app = Flask(__name__)
 
-#this is where the webpage is going to pull from. It's going
-#to always pull from here for data. I can't think of anything
-#else that the webpage is going to need for mvp
+# Sleep for 3 seconds before DB starts accepting
+# connections
+time.sleep(3)
+# Initialize the database
+conn = psycopg2.connect(dbname="sentock",
+                        user="sandy",
+                        password="pass",
+                        host="postgres",
+                        port="5432")
 
 #webpage asks for all stocks here
-@app.route('/api/stocks', methods=["POST"])
+# ask === GET
+# Example:
+# http://localhost/api/sentiments?company=Chipotle gives all chipotle data
+# http://localhost/api/sentiments givel all data
+@app.route('/api/sentiments', methods=["GET"])
 def get_stocks():
-    raw_data = request.data
-    stock_name = json.loads(raw_data)['stock_name']
-    print(stock_name, file=sys.stderr)
-    return "hello there"
+    company = request.args.get('company', default = '', type = str)
+    if (company == ''):
+        return jsonify(db.get_all(conn))
+    return jsonify(db.get_company(conn, company))
 
 #static page for docs of this
 @app.route('/api/docs', methods=["GET"])
