@@ -16,11 +16,11 @@ new Vue({
     },
     data: {
         graphs: [
-            new StockGraph('McDonald\'s', 'MCD', 'VF5PZ9DBDNDKYYSN'),
-            new StockGraph('Chipotle', 'CMG', 'ZDDTI9CUZ6SEF5IZ'),
-            new StockGraph('Microsoft', 'MSFT', '9O7U8ZRHOF4WU0FN'),
-            new StockGraph('Disney', 'DIS', 'N0U4CZ8XN5YCEK9U'),
-            new StockGraph('FedEx', 'FDX', 'YTU231UOF5L0T7WB')
+            new StockGraph('McDonald\'s', 'MCD', 'VF5PZ9DBDNDKYYSN')
+            // new StockGraph('Chipotle', 'CMG', 'ZDDTI9CUZ6SEF5IZ'),
+            // new StockGraph('Microsoft', 'MSFT', '9O7U8ZRHOF4WU0FN'),
+            // new StockGraph('Disney', 'DIS', 'N0U4CZ8XN5YCEK9U'),
+            // new StockGraph('FedEx', 'FDX', 'YTU231UOF5L0T7WB')
         ]
     }
 })
