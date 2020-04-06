@@ -17,6 +17,7 @@ conn = psycopg2.connect(dbname="sentock",
                         password="pass",
                         host="postgres",
                         port="5432")
+db.init_companies(conn)
 
 #webpage asks for all stocks here
 # ask === GET
