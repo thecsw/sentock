@@ -19,12 +19,13 @@ export class StockGraph {
         this.name = name
 
         // Make API call
-        let stocks = this.apiCall(symbol, apiKey).then(this.json2stocks)
+        let stocks = this.stockApiCall(symbol, apiKey)
+                         .then(this.json2stocks)
 
         // Scale sentiment data and draw
         stocks.then((stock => {
 
-            //warn about API key
+            // Warn about API key
             if(stock.length === 0) this.error = true
 
             const stockNumbers = stock.slice(-NUM_DAYS).map(n => parseFloat(n))
@@ -33,18 +34,35 @@ export class StockGraph {
             const midStock = (maxStock + minStock) / 2
             const stockDiff = maxStock - minStock
 
-            let sentiment = new Array(NUM_DAYS).fill(0).map(()=>Math.random()*2-1)
-            sentiment = sentiment.map(n => n * stockDiff / 2 + midStock)
-
-            this.draw(stock, sentiment, symbol)
+            this.sentimentApiCall(name)
+                .then(this.json2sentiments)
+                .then(sentiments => {
+                    return sentiments.map(n => n * stockDiff / 2 + midStock)
+                })
+                .then(sentiment => {
+                    this.draw(stock, sentiment, symbol)
+                })
         }).bind(this))
     }
 
     /**
-     * Makes an API call, and returns the json from it
+     * Makes a call to the sentiment API, and returns the json from it
      * @param {string} symbol Stock trading symbol
      */
-    apiCall(symbol, apiKey) {
+
+    sentimentApiCall(name) {
+        const api = '/api/sentiments'
+        const url = `${api}?company=${name}`
+
+        return fetch(url).then(res => res.json())
+    }
+
+    /**
+     * Makes a call to the stocks, and returns the json from it
+     * @param {string} symbol Stock trading symbol
+     */
+    stockApiCall(symbol, apiKey) {
+        // const apiKey = 'VF5PZ9DBDNDKYYSN'
         const api = 'https://www.alphavantage.co/query?'
         const url = `${api}function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}`
 
@@ -59,6 +77,9 @@ export class StockGraph {
      */
     draw(stock, sentiment, symbol) {
 
+        console.log(symbol, 'stock', stock)
+        console.log(symbol, 'sentiment', sentiment)
+
         let chart = this.getChart(
             stock.slice(-NUM_DAYS),
             sentiment.slice(-NUM_DAYS)
@@ -72,9 +93,9 @@ export class StockGraph {
     getChart(stock, sentiment) {
         // Generate colors
         const color = {
-            r: this.random(50, 150),
-            g: this.random(50, 150),
-            b: this.random(50, 150)
+            r: Math.random()*100 + 50,
+            g: Math.random()*100 + 50,
+            b: Math.random()*100 + 50
         }
 
         // Generate a dataset
@@ -108,6 +129,19 @@ export class StockGraph {
     }
 
     /**
+     * converts the JSON object from the API into a list of sentiment data
+     * @param {object} json The JSON object to be converted
+     */
+    json2sentiments(json) {
+        const dataKey = 3
+        let data = []
+
+        for(let day in json) data.push(json[day][dataKey])
+
+        return data
+    }
+
+    /**
      * Converts the JSON object from the API into a list of stock data
      * @param {object} json The JSON object to be converted
      */
@@ -121,14 +155,5 @@ export class StockGraph {
         for(let day in days) data.push(days[day][dataKey])
 
         return data
-    }
-
-    /**
-     * Generate a random number from min to max
-     * @param {number} min minimum possible number
-     * @param {number} max maximum possible number
-     */
-    random(min, max) {
-        return Math.random() * (max - min) + min
     }
 }
