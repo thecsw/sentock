@@ -1,5 +1,3 @@
-const NUM_DAYS = 30
-
 /**
  * All the information to create a graph
  */
@@ -8,6 +6,7 @@ export class StockGraph {
     error
     id
     name
+    numDays
     /**
      * Creates a stock graph
      * @param {string} name Company name
@@ -28,16 +27,19 @@ export class StockGraph {
             // Warn about API key
             if(stock.length === 0) this.error = true
 
-            const stockNumbers = stock.slice(-NUM_DAYS).map(n => parseFloat(n))
-            const maxStock = stockNumbers.reduce((a, b) => a > b ? a : b)
-            const minStock = stockNumbers.reduce((a, b) => a < b ? a : b)
-            const midStock = (maxStock + minStock) / 2
-            const stockDiff = maxStock - minStock
-
             this.sentimentApiCall(name)
                 .then(this.json2sentiments)
-                .then(sentiments => {
-                    return sentiments.map(n => n * stockDiff / 2 + midStock)
+                .then(sentiment => {
+                    // Scale sentiment data to make sense on the graph
+                    this.numDays = sentiment.length
+
+                    const stockNumbers = stock.slice(-this.numDays).map(n => parseFloat(n))
+                    const maxStock = stockNumbers.reduce((a, b) => a > b ? a : b)
+                    const minStock = stockNumbers.reduce((a, b) => a < b ? a : b)
+                    const midStock = (maxStock + minStock) / 2
+                    const stockDiff = maxStock - minStock
+
+                    return sentiment.map(n => n * stockDiff / 2 + midStock)
                 })
                 .then(sentiment => {
                     this.draw(stock, sentiment, symbol)
@@ -77,12 +79,12 @@ export class StockGraph {
      */
     draw(stock, sentiment, symbol) {
 
-        console.log(symbol, 'stock', stock)
-        console.log(symbol, 'sentiment', sentiment)
+        console.log(symbol, 'stock', stock.slice(-this.numDays))
+        console.log(symbol, 'sentiment', sentiment.slice(-this.numDays))
 
         let chart = this.getChart(
-            stock.slice(-NUM_DAYS),
-            sentiment.slice(-NUM_DAYS)
+            stock.slice(-this.numDays),
+            sentiment.slice(-this.numDays)
         )
 
         //draw on canvas
@@ -104,7 +106,7 @@ export class StockGraph {
         return {
             type: 'line',
             data: {
-                labels: this.getLabels(NUM_DAYS),
+                labels: this.getLabels(this.numDays),
                 datasets: [
                     dataset('Stock Price', stock, `rgb(${color.r}, ${color.g}, ${color.b})`),
                     dataset('Sentiment Rating', sentiment, `rgb(${color.r+100}, ${color.g+100}, ${color.b+100})`)
