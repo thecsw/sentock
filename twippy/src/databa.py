@@ -36,12 +36,10 @@ def add_sentiment(company, tweet_id, original, timestamp, sentiment):
 def get_sentiments(company, before, after):
     c = conn.cursor()
     c.execute("""
-    SELECT * FROM companies WHERE company = %s AND timestamp < %s AND timestamp > %s ORDER BY timestamp DESC;
+    SELECT timestamp, sentiment FROM companies WHERE company = %s AND timestamp < %s AND timestamp > %s ORDER BY timestamp DESC;
     """, (company, int(before), int(after),))
     result = c.fetchall()
     c.close()
-    print(company)
-    print(result)
     return result
 
 def close():
