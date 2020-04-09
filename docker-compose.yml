@@ -3,8 +3,8 @@ services:
     postgres:
         image: postgres:11.3-alpine
         env_file: .env
-        ports:
-          - 5432:5432
+        # ports:
+        #   - 5432:5432
         restart: unless-stopped
         volumes:
           - /data/sentocks/postgres:/var/lib/postgres/data
@@ -13,7 +13,7 @@ services:
         build: ./webpage
         restart: unless-stopped
         ports:
-          - 7839:80
+          - 5050:80
         depends_on:
           - postgres
           - api
