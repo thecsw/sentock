@@ -90,7 +90,7 @@ mstream = tweepy.Stream(auth = api.auth, listener=testStreamListener)
 mstream.filter(track=companies, is_async=True)
 print("waiting...")
 while True:
-    time.sleep(180)
+    time.sleep(1800)
 print("Disconnecting..")
 mstream.disconnect()
 databa.close()
