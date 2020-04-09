@@ -2,7 +2,7 @@
 from flask import Flask, request, jsonify, render_template
 import sys
 import json
-import db
+import databa
 import psycopg2
 import time
 
@@ -17,7 +17,7 @@ conn = psycopg2.connect(dbname="sentock",
                         password="pass",
                         host="postgres",
                         port="5432")
-db.init_companies(conn)
+databa.create_table()
 
 #webpage asks for all stocks here
 # ask === GET
@@ -27,14 +27,11 @@ db.init_companies(conn)
 @app.route('/api/sentiments', methods=["GET"])
 def get_stocks():
     company = request.args.get('company', default = '', type = str)
+    before = request.args.get('before', default = int(time.time()), type = int)
+    after = request.args.get('after', default = int(time.time())-24*3600, type = int)
     if (company == ''):
-        return jsonify(db.get_all(conn))
-    return jsonify(db.get_company(conn, company))
-
-#static page for docs of this
-@app.route('/api/docs', methods=["GET"])
-def serve():
-    return render_template('app.html')
+        return jsonify({"Error":"No company name provided!"})
+    return jsonify(databa.get_sentiments(company, before, after))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)

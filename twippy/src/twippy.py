@@ -21,6 +21,9 @@ analyzer = SentimentIntensityAnalyzer()
 
 texts = []
 
+# List of companies we would like to find in our tweets
+companies = ["McDonald", "McDonalds", "McDonald\'s", "Chipotle", "Chipotle\'s", "Microsoft", "Microsoft\'s", "Fedex", "Fedex\'s", "Disney", "Walt Disney", "Disney\'s"]
+
 # Create the main table
 databa.create_table()
 
@@ -29,8 +32,22 @@ def got_tweet(tweet_id, text, created_at):
     if (sentimentValue == 0):
         return
     print(f"{text} | sentiment: {sentimentValue}")
+    # Compute the company
+    company = ""
+    if companies[0].lower() in text.lower() or companies[1].lower() in text.lower() or companies[2].lower() in text.lower():
+        company = "McDonald"
+    elif companies[3].lower() in text.lower() or companies[4].lower() in text.lower():
+        company = "Chipotle"
+    elif companies[5].lower() in text.lower() or companies[6].lower() in text.lower():
+        company = "Microsoft"
+    elif companies[7].lower() in text.lower() or companies[8].lower() in text.lower():
+        company = "Fedex"
+    elif companies[9].lower() in text.lower() or companies[10].lower() in text.lower() or companies[11].lower() in text.lower():
+        company = "Disney"
+    if company == "":
+        return
     databa.add_sentiment(
-        "McDonalds", 
+        company, 
         tweet_id, 
         text, 
         created_at, 
@@ -41,41 +58,20 @@ class TestStreamListener(tweepy.StreamListener):
     def on_status(self, status):
         # Get the actual payload
         msg = status._json
-
         # make sure it is not a retweet (we ignore retweets)
         if 'retweeted_status' in msg:
             return True
-
         # Log the tweet's creation time in unix timestamp
         createdAt = int(time.mktime(time.strptime(msg["created_at"].replace("+0000",""))))
         print("New tweet found, extended: " + str((msg['truncated'])) + 
               ", Retweet: " + str(('retweeted_status' in msg)) + 
               ", Created At (UNIX): " + str(createdAt))
-        ### Check if the tweet is a retweet:
-        #if 'retweeted_status' in msg:
-        #    # we ignore retweets:
-        #    return True
-            ## Check if retweet is truncated:
-            #if msg['retweeted_status']['truncated']:
-            #    got_tweet(msg['id_str'], msg['retweeted_status']['extended_tweet']['full_text'], createdAt)
-            #    #print(msg['retweeted_status']['extended_tweet']['full_text'])
-            #    #texts.append((msg['retweeted_status']['extended_tweet']['full_text'], createdAt))
-            #    return True
-            ## if the tweet is not truncated:
-            #got_tweet(msg['id_str'], msg['retweeted_status']['text'], createdAt)
-            ##print(msg['retweeted_status']['text'])
-            ##texts.append((msg['retweeted_status']['text'], createdAt))
-            #return True
         # If the tweet text is collapsed because its too long:
         if msg['truncated']:
             got_tweet(msg['id_str'], msg['extended_tweet']['full_text'], createdAt)
-            #print(msg['extended_tweet']['full_text'])
-            #texts.append((msg['extended_tweet']['full_text'], createdAt))
             return True
         # The tweet is a regular one (not a retweet or more than 140? character long)
         got_tweet(msg['id_str'], msg['text'], createdAt)
-        #print(msg['text'])
-        #texts.append((msg['text'], createdAt))
         return True
  
     # Callback on error
@@ -91,10 +87,10 @@ class TestStreamListener(tweepy.StreamListener):
 print("Setting up listener...")
 testStreamListener = TestStreamListener()
 mstream = tweepy.Stream(auth = api.auth, listener=testStreamListener)
-mstream.filter(track=['McDonald,McDonalds,McDonald\'s'], is_async=True)
+mstream.filter(track=companies, is_async=True)
 print("waiting...")
-time.sleep(120)
+while True:
+    time.sleep(180)
 print("Disconnecting..")
 mstream.disconnect()
-
 databa.close()

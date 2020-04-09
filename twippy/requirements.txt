@@ -2,3 +2,5 @@ tweepy
 vaderSentiment
 datetime
 psycopg2
+Flask
+pycco
