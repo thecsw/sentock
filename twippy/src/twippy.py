@@ -31,7 +31,6 @@ def got_tweet(tweet_id, text, created_at):
     sentimentValue = float(analyzer.polarity_scores(text)["compound"])
     if (sentimentValue == 0):
         return
-    print(f"{text} | sentiment: {sentimentValue}", flush=True)
     # Compute the company
     company = ""
     if companies[0].lower() in text.lower() or companies[1].lower() in text.lower() or companies[2].lower() in text.lower():
@@ -46,6 +45,7 @@ def got_tweet(tweet_id, text, created_at):
         company = "Disney"
     if company == "":
         return
+    print(f"{text} | sentiment: {sentimentValue}", flush=True)
     databa.add_sentiment(
         company, 
         tweet_id, 
