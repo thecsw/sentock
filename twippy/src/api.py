@@ -28,7 +28,7 @@ databa.create_table()
 def get_stocks():
     company = request.args.get('company', default = '', type = str)
     before = request.args.get('before', default = int(time.time()), type = int)
-    after = request.args.get('after', default = int(time.time())-24*3600, type = int)
+    after = request.args.get('after', default = int(time.time())-12*3600, type = int)
     if (company == ''):
         return jsonify({"Error":"No company name provided!"})
     return jsonify(databa.get_sentiments(company, before, after))
