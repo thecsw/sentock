@@ -42,6 +42,18 @@ def get_sentiments(company, before, after):
     c.close()
     if (len(result) < 1):
         return []
+    #moving average (of time period of size [window] seconds):
+    window = 30*60 #window size of half an hour
+    latest = (result[0][0]//60)*60 #anchor on the minute mark
+    end_result = []
+    while latest > result[len(result)-1][0]:
+        window_ave = get_window_ave(result, window, latest)
+        if window_ave is not None:
+            end_result.append((latest,window_ave))
+        latest-=60
+    return end_result
+    
+    #before data smoothing:
     before = (result[0][0]//60)*60
     new_result = []
     while before > result[len(result)-1][0]:
@@ -54,8 +66,17 @@ def get_sentiments(company, before, after):
 def close():
     conn.close()
 
+def get_window_ave(vals, window, latest):
+    values = get_vals_of_interval(vals, latest, latest-window)
+    if (len(values)==0):
+        return None
+    sumVal = 0 
+    for val in values:
+        sumVal += val[1]
+    return sumVal / len(values)
+
 def get_average_of_interval(vals, before):
-    values = get_vals_of_interval(vals, before)
+    values = get_vals_of_interval(vals, before, before-60)
     if (len(values)==0):
         return None
     sumVal = 0 
@@ -73,9 +94,8 @@ def get_average_of_interval(vals, before):
 # AFTER
 # ...
 # ...
-def get_vals_of_interval(vals, before):
+def get_vals_of_interval(vals, before, after):
     ans = []
-    after = before - 60
     for val in vals:
         if (val[0] < before and val[0] > after):
             ans.append(val)
