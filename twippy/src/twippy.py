@@ -75,10 +75,10 @@ class TestStreamListener(tweepy.StreamListener):
     def on_error(self, status_code):
         if status_code == 420:
             #returning False in on_error disconnects the stream
-            print("Error code 420 occurred, waiting 15 seconds before continuing")
+            print("Error code 420 occurred, waiting 15 seconds before continuing", flush=True)
             time.sleep(15)
             return True
-        print("Uncaught Error occured while listening: " + str(status_code))
+        print("Uncaught Error occured while listening: " + str(status_code), flush=True)
         return False
 
 print("Setting up listener...")

@@ -40,7 +40,44 @@ def get_sentiments(company, before, after):
     """, (company, int(before), int(after),))
     result = c.fetchall()
     c.close()
-    return result
+    print(result, flush=True)
+    if (len(result) < 1):
+        return []
+    before = (result[0][0]//60)*60
+    new_result = []
+    while before > result[len(result)-1][0]:
+        new_result.append((before,get_average_of_interval(result, before)))
+        before -= 60
+    return new_result
 
 def close():
     conn.close()
+
+def get_average_of_interval(vals, before):
+    values = get_vals_of_interval(vals, before)
+    if (len(values)==0):
+        return None
+    sumVal = 0 
+    for val in values:
+        sumVal += val[1]
+    return sumVal / len(values)
+
+# Descending order
+#
+# ...
+# ...
+# BEFORE
+# ...
+# ...
+# AFTER
+# ...
+# ...
+def get_vals_of_interval(vals, before):
+    ans = []
+    after = before - 60
+    for val in vals:
+        if (val[0] < before and val[0] > after):
+            ans.append(val)
+        if (val[0] < after):
+            break
+    return ans
