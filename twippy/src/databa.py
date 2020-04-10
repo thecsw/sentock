@@ -40,13 +40,14 @@ def get_sentiments(company, before, after):
     """, (company, int(before), int(after),))
     result = c.fetchall()
     c.close()
-    print(result, flush=True)
     if (len(result) < 1):
         return []
     before = (result[0][0]//60)*60
     new_result = []
     while before > result[len(result)-1][0]:
-        new_result.append((before,get_average_of_interval(result, before)))
+        ave = get_average_of_interval(result, before)
+        if ave is not None:
+            new_result.append((before,ave))
         before -= 60
     return new_result
 
