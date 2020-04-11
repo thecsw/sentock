@@ -11,6 +11,8 @@ import json
 import databa
 import psycopg2
 import time
+import mpld3
+from mpld3 import plugins
 
 app = Flask(__name__)
 
@@ -56,9 +58,15 @@ def get_graph_24h():
         ax.plot_date(pltdates.date2num(x_vals), signal.medfilt(y_vals), 
         label=company, linestyle='solid', marker=None)
     ax.legend()
-    filename = f"{before}.svg"
-    plt.savefig(filename)
-    return send_file(filename, mimetype='image/svg')
+    handles, labels = ax.get_legend_handles_labels() # return lines and labels
+    interactive_legend = plugins.InteractiveLegendPlugin(zip(handles,
+                                                         ax.collections),
+                                                        labels,
+                                                        alpha_unsel=0.5,
+                                                        alpha_over=1.5, 
+                                                        start_visible=True)
+    plugins.connect(fig, interactive_legend)
+    return mpld3.fig_to_html(fig)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)
