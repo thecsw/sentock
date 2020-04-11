@@ -62,12 +62,15 @@ def got_tweet(tweet_id, text, created_at):
     if company == "":
         return
     print(f"{text} | sentiment: {sentimentValue}", flush=True)
-    databa.add_sentiment(
-        company, 
-        tweet_id, 
-        text, 
-        created_at, 
+    try:
+        databa.add_sentiment(
+            company, 
+            tweet_id, 
+            text, 
+            created_at, 
         sentimentValue)
+    except:
+        pass
 
 class SentStreamListener(tweepy.StreamListener):
 
