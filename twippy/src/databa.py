@@ -48,7 +48,6 @@ def get_sentiments(company, before, after):
     end_result = []
     start = 0
     while latest > result[len(result)-1][0]:
-        print(before, start, flush=True)
         (window_ave, start) = get_window_ave(result, window, latest, start)
         if window_ave is not None:
             end_result.append((latest,window_ave))
