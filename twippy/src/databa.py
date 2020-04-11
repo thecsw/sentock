@@ -34,20 +34,22 @@ def add_sentiment(company, tweet_id, original, timestamp, sentiment):
     c.close()
 
 def get_sentiments(company, before, after):
+    window = 60*60 #window size of an hour
+
     c = conn.cursor()
     c.execute("""
     SELECT timestamp, sentiment FROM companies WHERE company = %s AND timestamp < %s AND timestamp > %s ORDER BY timestamp DESC;
-    """, (company, int(before), int(after),))
+    """, (company, int(before), (int(after)-window),))
     result = c.fetchall()
     c.close()
     if (len(result) < 1):
         return []
     #moving average (of time period of size [window] seconds):
-    window = 60*60 #window size of an hour
+    #window = 60*60 #window size of an hour
     latest = (result[0][0]//60)*60 #anchor on the minute mark
     end_result = []
     start = 0
-    while latest > result[len(result)-1][0]:
+    while latest > int(after):
         (window_ave, start) = get_window_ave(result, window, latest, start)
         if window_ave is not None:
             end_result.append((latest,window_ave))
