@@ -71,9 +71,9 @@ def get_vals_of_interval(vals, before, after, start):
     ans = []
     startNew = start
     for val in vals[start:]:
+        startNew += 1
         if (val[0] < before and val[0] > after):
             ans.append(val)
-            startNew += 1
         if (val[0] < after):
             break
     return (ans, startNew)
