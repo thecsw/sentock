@@ -56,9 +56,9 @@ def get_graph_24h():
         ax.plot_date(pltdates.date2num(x_vals), signal.medfilt(y_vals), 
         label=company, linestyle='solid', marker=None)
     ax.legend()
-    filename = f"{before}.png"
+    filename = f"{before}.svg"
     plt.savefig(filename)
-    return send_file(filename, mimetype='image/png')
+    return send_file(filename, mimetype='image/svg')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)
