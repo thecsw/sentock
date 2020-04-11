@@ -43,7 +43,7 @@ def get_sentiments(company, before, after):
     if (len(result) < 1):
         return []
     #moving average (of time period of size [window] seconds):
-    window = 30*60 #window size of half an hour
+    window = 60*60 #window size of an hour
     latest = (result[0][0]//60)*60 #anchor on the minute mark
     end_result = []
     while latest > result[len(result)-1][0]:
@@ -68,7 +68,7 @@ def close():
 
 def get_window_ave(vals, window, latest):
     values = get_vals_of_interval(vals, latest, latest-window)
-    if (len(values)==0):
+    if (len(values)<=5):
         return None
     sumVal = 0 
     for val in values:

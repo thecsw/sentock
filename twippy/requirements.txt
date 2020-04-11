@@ -4,3 +4,6 @@ datetime
 psycopg2
 Flask
 pycco
+matplotlib
+scipy
+requests
