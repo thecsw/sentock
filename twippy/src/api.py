@@ -41,19 +41,20 @@ def get_stocks():
 
 @app.route('/api/graphs', methods=["GET"])
 def get_graph_24h():
+    hours = request.args.get('h', default = 12, type = int)
     before = int(time.time())
-    after = before - 24*3600
+    after = before - hours*3600
     companies = ["McDonalds", "Fedex", "Chipotle", "Microsoft", "Disney"]
-    plt.xkcd()
     fig, ax = plt.subplots()
-    ax.set_xlabel("UNIX timestamps")
+    ax.set_xlabel("Date")
     ax.set_ylabel("Sentiment")
     ax.set_title("Sentimental stocks")
     for company in companies:
         values = databa.get_sentiments(company, before, after)
         x_vals = [datetime.fromtimestamp(x[0]) for x in values]
         y_vals = [x[1] for x in values]
-        ax.plot_date(pltdates.date2num(x_vals), signal.medfilt(y_vals), label=company)
+        ax.plot_date(pltdates.date2num(x_vals), signal.medfilt(y_vals), 
+        label=company, linestyle='solid', marker=None)
     ax.legend()
     filename = f"{before}.png"
     plt.savefig(filename)
