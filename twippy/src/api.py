@@ -46,7 +46,7 @@ def get_graph_24h():
     hours = request.args.get('h', default = 12, type = int)
     before = int(time.time())
     after = before - hours*3600
-    companies = ["McDonalds", "Fedex", "Chipotle", "Microsoft", "Disney"]
+    companies = ["McDonalds", "Fedex", "Chipotle", "Microsoft", "Disney", "Tesla", "Twitter", "Google", "Facebook", "Amazon"]
     fig, ax = plt.subplots()
     ax.set_xlabel("Date")
     ax.set_ylabel("Sentiment")
@@ -66,7 +66,7 @@ def get_graph_24h():
                                                         alpha_over=1.5, 
                                                         start_visible=True)
     plugins.connect(fig, interactive_legend)
-    return mpld3.fig_to_html(fig)
+    return mpld3.fig_to_html(fig, figid="mygraph")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)

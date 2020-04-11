@@ -22,7 +22,16 @@ analyzer = SentimentIntensityAnalyzer()
 texts = []
 
 # List of companies we would like to find in our tweets
-companies = ["McDonalds", "McDonald\'s", "Chipotle", "Chipotle\'s", "Microsoft", "Microsoft\'s", "Fedex", "Fedex\'s", "Disney", "Walt Disney", "Disney\'s"]
+companies = ["McDonalds", "McDonald\'s", 
+            "Chipotle", "Chipotle\'s", 
+            "Microsoft", "Microsoft\'s",
+            "Fedex", "Fedex\'s", 
+            "Disney", "Walt Disney", "Disney\'s",
+            "Tesla", "TSLA", "Tesla\'s",
+            "Twitter", "Twitter\'s",
+            "Google", "Google\'s", "\"Alphabet Inc\"", "\"Alphabet Inc.\"",
+            "Facebook", "Facebook\'s",
+            "Amazon", "Amozon\'s"]
 
 # Create the main table
 databa.create_table()
@@ -43,6 +52,16 @@ def got_tweet(tweet_id, text, created_at):
         company = "Fedex"
     elif companies[8].lower() in text.lower() or companies[9].lower() in text.lower() or companies[10].lower() in text.lower():
         company = "Disney"
+    elif companies[11].lower() in text.lower() or companies[12].lower() in text.lower() or companies[13].lower() in text.lower():
+        company = "Tesla"
+    elif companies[14].lower() in text.lower() or companies[15].lower() in text.lower():
+        company = "Twitter"
+    elif companies[16].lower() in text.lower() or companies[17].lower() in text.lower() or companies[18].lower() in text.lower() or companies[19].lower() in text.lower():
+        company = "Google"
+    elif companies[20].lower() in text.lower() or companies[21].lower() in text.lower():
+        company = "Facebook"
+    elif companies[22].lower() in text.lower() or companies[23].lower() in text.lower():
+        company = "Amazon"
     if company == "":
         return
     print(f"{text} | sentiment: {sentimentValue}", flush=True)
