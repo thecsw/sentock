@@ -48,6 +48,7 @@ def get_sentiments(company, before, after):
     end_result = []
     start = 0
     while latest > result[len(result)-1][0]:
+        print(before, start, flush=True)
         (window_ave, start) = get_window_ave(result, window, latest, start)
         if window_ave is not None:
             end_result.append((latest,window_ave))
@@ -58,29 +59,21 @@ def close():
     conn.close()
 
 def get_window_ave(vals, window, latest, start):
-    (values, start) = get_vals_of_interval(vals, latest, latest-window, start)
+    (values, startNew) = get_vals_of_interval(vals, latest, latest-window, start)
     if (len(values)<=5):
-        return (None, start)
+        return (None, startNew)
     sumVal = 0 
     for val in values:
         sumVal += val[1]
-    return (sumVal / len(values), start)
-
-def get_average_of_interval(vals, before, start):
-    (values, start) = get_vals_of_interval(vals, before, before-60, start)
-    if (len(values)==0):
-        return (None, start)
-    sumVal = 0 
-    for val in values:
-        sumVal += val[1]
-    return (sumVal / len(values), start)
+    return (sumVal / len(values), startNew)
 
 def get_vals_of_interval(vals, before, after, start):
     ans = []
+    startNew = start
     for val in vals[start:]:
         if (val[0] < before and val[0] > after):
             ans.append(val)
-            start += 1
+            startNew += 1
         if (val[0] < after):
             break
-    return (ans, start)
+    return (ans, startNew)
