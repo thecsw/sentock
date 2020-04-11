@@ -53,7 +53,7 @@ def got_tweet(tweet_id, text, created_at):
         created_at, 
         sentimentValue)
 
-class TestStreamListener(tweepy.StreamListener):
+class SentStreamListener(tweepy.StreamListener):
 
     def on_status(self, status):
         # Get the actual payload
@@ -82,8 +82,8 @@ class TestStreamListener(tweepy.StreamListener):
         return False
 
 print("Setting up listener...")
-testStreamListener = TestStreamListener()
-mstream = tweepy.Stream(auth = api.auth, listener=testStreamListener)
+sentStreamListener = SentStreamListener()
+mstream = tweepy.Stream(auth = api.auth, listener=sentStreamListener)
 mstream.filter(track=companies, is_async=True)
 print("waiting...")
 while True:

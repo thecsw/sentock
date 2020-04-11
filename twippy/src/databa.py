@@ -45,7 +45,6 @@ def get_sentiments(company, before, after):
     if (len(result) < 1):
         return []
     #moving average (of time period of size [window] seconds):
-    #window = 60*60 #window size of an hour
     latest = (result[0][0]//60)*60 #anchor on the minute mark
     end_result = []
     start = 0
