@@ -46,59 +46,41 @@ def get_sentiments(company, before, after):
     window = 60*60 #window size of an hour
     latest = (result[0][0]//60)*60 #anchor on the minute mark
     end_result = []
+    start = 0
     while latest > result[len(result)-1][0]:
-        window_ave = get_window_ave(result, window, latest)
+        (window_ave, start) = get_window_ave(result, window, latest, start)
         if window_ave is not None:
             end_result.append((latest,window_ave))
         latest-=60
     return end_result
-    
-    #before data smoothing:
-    before = (result[0][0]//60)*60
-    new_result = []
-    while before > result[len(result)-1][0]:
-        ave = get_average_of_interval(result, before)
-        if ave is not None:
-            new_result.append((before,ave))
-        before -= 60
-    return new_result
 
 def close():
     conn.close()
 
-def get_window_ave(vals, window, latest):
-    values = get_vals_of_interval(vals, latest, latest-window)
+def get_window_ave(vals, window, latest, start):
+    (values, start) = get_vals_of_interval(vals, latest, latest-window, start)
     if (len(values)<=5):
-        return None
+        return (None, start)
     sumVal = 0 
     for val in values:
         sumVal += val[1]
-    return sumVal / len(values)
+    return (sumVal / len(values), start)
 
-def get_average_of_interval(vals, before):
-    values = get_vals_of_interval(vals, before, before-60)
+def get_average_of_interval(vals, before, start):
+    (values, start) = get_vals_of_interval(vals, before, before-60, start)
     if (len(values)==0):
-        return None
+        return (None, start)
     sumVal = 0 
     for val in values:
         sumVal += val[1]
-    return sumVal / len(values)
+    return (sumVal / len(values), start)
 
-# Descending order
-#
-# ...
-# ...
-# BEFORE
-# ...
-# ...
-# AFTER
-# ...
-# ...
-def get_vals_of_interval(vals, before, after):
+def get_vals_of_interval(vals, before, after, start):
     ans = []
-    for val in vals:
+    for val in vals[start:]:
         if (val[0] < before and val[0] > after):
             ans.append(val)
+            start += 1
         if (val[0] < after):
             break
-    return ans
+    return (ans, start)

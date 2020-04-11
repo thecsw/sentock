@@ -1,10 +1,8 @@
-FROM python:3.6-alpine
+FROM python:3.8.2-buster
 WORKDIR /code
 COPY requirements.txt .
 RUN \
- apk add --no-cache postgresql-libs && \
- apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev && \
- python3 -m pip install -r requirements.txt --no-cache-dir && \
- apk --purge del .build-deps
+ apt-get install -y gcc && \
+ python3 -m pip install -r requirements.txt --no-cache-dir
 WORKDIR /code/src
 COPY src .
