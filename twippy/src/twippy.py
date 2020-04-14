@@ -103,10 +103,10 @@ class SentStreamListener(tweepy.StreamListener):
 print("Setting up listener...")
 sentStreamListener = SentStreamListener()
 mstream = tweepy.Stream(auth = api.auth, listener=sentStreamListener)
-mstream.filter(track=companies, is_async=True)
-print("waiting...")
-while True:
-    time.sleep(1800)
+mstream.filter(track=companies, is_async=False)
+#print("waiting...")
+#while True:
+#    time.sleep(1800)
 print("Disconnecting..")
 mstream.disconnect()
 databa.close()
