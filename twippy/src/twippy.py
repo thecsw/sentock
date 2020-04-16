@@ -104,7 +104,7 @@ if __name__=="__main__":
     print("Setting up listener...")
     sentStreamListener = SentStreamListener()
     mstream = tweepy.Stream(auth = api.auth, listener=sentStreamListener)
-    mstream.filter(track=companies, is_async=True)
+    mstream.filter(track=companies, is_async=False)
     print("waiting...")
     while True:
         time.sleep(1800)
