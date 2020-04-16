@@ -100,13 +100,14 @@ class SentStreamListener(tweepy.StreamListener):
         print("Uncaught Error occured while listening: " + str(status_code), flush=True)
         return False
 
-print("Setting up listener...")
-sentStreamListener = SentStreamListener()
-mstream = tweepy.Stream(auth = api.auth, listener=sentStreamListener)
-mstream.filter(track=companies, is_async=True)
-print("waiting...")
-while True:
-    time.sleep(1800)
-print("Disconnecting..")
-mstream.disconnect()
-databa.close()
+if __name__=="__main__":
+    print("Setting up listener...")
+    sentStreamListener = SentStreamListener()
+    mstream = tweepy.Stream(auth = api.auth, listener=sentStreamListener)
+    mstream.filter(track=companies, is_async=True)
+    print("waiting...")
+    while True:
+        time.sleep(1800)
+    print("Disconnecting..")
+    mstream.disconnect()
+    databa.close()
