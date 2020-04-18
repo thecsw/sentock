@@ -10,7 +10,13 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
-func connectDB(database string) (*gorm.DB, error) {
+type elephant struct{}
+
+var (
+	Elephant = &elephant{}
+)
+
+func (_ *elephant) connectDB(database string) (*gorm.DB, error) {
 	const timeout = 1 * time.Minute
 	deadline := time.Now().Add(timeout)
 	tries := 0
@@ -27,38 +33,39 @@ func connectDB(database string) (*gorm.DB, error) {
 	return nil, fmt.Errorf("failed connect to the database after %d attempts", tries)
 }
 
-func createCompany(name string) error {
+func (_ *elephant) createCompany(name string) error {
 	return db.Create(&Company{Name: name}).Error
 }
 
-func createSentiment(tweetID string, unix int, sentiment float64, company string) error {
-	return db.Create(&Sentiment{
+func (e *elephant) createSentiment(tweetID string, unix int, sentiment float64, company string) (*Sentiment, error) {
+	ans := &Sentiment{
 		TweetID:   tweetID,
 		Unix:      unix,
 		Sentiment: sentiment,
-		CompanyID: ctod(company),
-	}).Error
+		CompanyID: e.ctod(company),
+	}
+	return ans, db.Create(ans).Error
 }
 
-func getSentiments(company string, before, after int) ([]Sentiment, error) {
+func (_ *elephant) getSentiments(company string, before, after int) ([]Sentiment, error) {
 	result := make([]Sentiment, 0, 128)
 	return result, db.Model(&Sentiment{}).
-		Where("id = ?", ctod(company)).
+		Joins("inner join companies on companies.name = ?", company).
 		Where("unix > ?", after).
 		Where("unix < ?", before).
 		Find(&result).
 		Error
 }
 
-func close() error {
+func (_ *elephant) close() error {
 	return db.Close()
 }
 
-func autoMigrate() error {
+func (_ *elephant) autoMigrate() error {
 	return db.AutoMigrate(&Company{}, &Sentiment{}).Error
 }
 
-func ctod(company string) uint {
+func (_ *elephant) ctod(company string) uint {
 	companyID := uint(0)
 	var ok bool
 	if companyID, ok = cachedNames[company]; !ok {
