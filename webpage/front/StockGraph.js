@@ -53,7 +53,7 @@ export class StockGraph {
      */
 
     sentimentApiCall(name) {
-        const api = '/api/sentiments'
+        const api = 'http://167.172.114.123:5050/api/sentiments'
         const url = `${api}?company=${name}`
 
         return fetch(url).then(res => res.json())
@@ -66,7 +66,7 @@ export class StockGraph {
     stockApiCall(symbol, apiKey) {
         // const apiKey = 'VF5PZ9DBDNDKYYSN'
         const api = 'https://www.alphavantage.co/query?'
-        const url = `${api}function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}`
+        const url = `${api}function=TIME_SERIES_INTRADAY&outputsize=full&symbol=${symbol}&interval=1min&apikey=${apiKey}`
 
         return fetch(url).then(res => res.json())
     }
@@ -122,11 +122,12 @@ export class StockGraph {
      */
     getLabels(n) {
         let date = new Date
-        date.setDate(date.getDate() - n)
+        date = new Date(date.getTime() + n * 60000)
 
         return [...Array(n).keys()].map(n => {
-            date.setDate(date.getDate() + 1)
-            return `${date.getMonth()}/${date.getDate()}/${date.getFullYear()}`
+            date = new Date(date.getTime() + 60000)
+            let min = date.getMinutes()
+            return `${date.getHours()}:${min<10?'0':''}${min}`
         })
     }
 
@@ -135,12 +136,7 @@ export class StockGraph {
      * @param {object} json The JSON object to be converted
      */
     json2sentiments(json) {
-        const dataKey = 3
-        let data = []
-
-        for(let day in json) data.push(json[day][dataKey])
-
-        return data
+        return json.map(e => e[1])
     }
 
     /**
@@ -148,13 +144,13 @@ export class StockGraph {
      * @param {object} json The JSON object to be converted
      */
     json2stocks(json) {
-        const daysKey = 'Time Series (Daily)'
+        const minKey = 'Time Series (1min)'
         const dataKey = '4. close'
 
-        const days = json[daysKey]
+        const minutes = json[minKey]
         let data = []
 
-        for(let day in days) data.push(days[day][dataKey])
+        for(let min in minutes) data.push(minutes[min][dataKey])
 
         return data
     }
