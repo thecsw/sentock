@@ -26,3 +26,8 @@ type Sentiment struct {
 	Sentiment float64 `json:"sentiment"`
 	CompanyID uint    `json:"-"`
 }
+
+type dataPoint struct {
+	Unix         int
+	AveSentiment float64
+}
