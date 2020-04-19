@@ -4,6 +4,7 @@ import json
 import time
 import databa
 import requests
+import json
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 #test out tweet streaming:
@@ -21,6 +22,9 @@ api = tweepy.API(auth)
 analyzer = SentimentIntensityAnalyzer()
 
 texts = []
+
+URL = 'http://server:10000/sentiments'
+session = requests.session()
 
 # List of companies we would like to find in our tweets
 companies = ["McDonalds", "McDonald\'s", 
@@ -63,15 +67,14 @@ def got_tweet(tweet_id, text, created_at):
     if company == "":
         return
     print(f"{text} | sentiment: {sentimentValue}", flush=True)
-    try:
-        # Make the call
-        requests.post("server:10000/api/sentiments", data={
-            "company":company,
-            "tweet_id":tweet_id,
-            "sentiment":float(sentimentValue),
-            "unix":int(created_at)})
-    except:
-        pass
+    payload = {
+        "company":company,
+        "tweet_id":tweet_id,
+        "sentiment":float(sentimentValue),
+        "unix":int(created_at)
+    }
+    # Make the call
+    requests.post(URL, data=json.dumps(payload))
 
 class SentStreamListener(tweepy.StreamListener):
 

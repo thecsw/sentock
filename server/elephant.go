@@ -33,8 +33,9 @@ func (*elephant) connectDB(database string) (*gorm.DB, error) {
 	return nil, fmt.Errorf("failed connect to the database after %d attempts", tries)
 }
 
-func (*elephant) createCompany(name string) error {
-	return db.Create(&Company{Name: name}).Error
+func (*elephant) createCompany(name string) (*Company, error) {
+	res := &Company{Name: name}
+	return res, db.Create(res).Error
 }
 
 func (e *elephant) createSentiment(tweetID string, unix int, sentiment float64, company string) (*Sentiment, error) {
@@ -66,14 +67,19 @@ func (*elephant) autoMigrate() error {
 	return db.AutoMigrate(&Company{}, &Sentiment{}).Error
 }
 
-func (*elephant) ctod(company string) uint {
+func (e *elephant) ctod(company string) uint {
 	companyID := uint(0)
 	var ok bool
 	if companyID, ok = cachedNames[company]; !ok {
 		res := &Company{}
 		err := db.Where(&Company{Name: company}).First(res).Error
-		if err != nil {
-			return 0
+		// Not found, automatically make one
+		if res.ID == 0 || err != nil {
+			c, err := e.createCompany(company)
+			if err != nil {
+				return 0
+			}
+			res.ID = c.ID
 		}
 		cachedNames[company] = res.ID
 		companyID = res.ID

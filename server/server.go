@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/sanity-io/litter"
 )
 
 type webError struct {
@@ -21,13 +22,25 @@ type sentimentPayload struct {
 	Unix      int     `json:"unix"`
 }
 
+func hello(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(webError{Msg: "hello, world"})
+}
+
 func addSentiment(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("--------- GOT REQUEST")
 	payload := &sentimentPayload{}
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(payload)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(webError{Msg: err.Error()})
+		json.NewEncoder(w).Encode(webError{Msg: "Failed decoding: " + err.Error()})
+		return
+	}
+	litter.Dump(payload)
+	if payload.TweetID == "" || payload.Unix == 0 || payload.Company == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(webError{Msg: "Received empty params."})
 		return
 	}
 	res, err := Elephant.createSentiment(
@@ -38,7 +51,7 @@ func addSentiment(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(webError{Msg: err.Error()})
+		json.NewEncoder(w).Encode(webError{Msg: "Failed committing to DB: " + err.Error()})
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -46,9 +59,16 @@ func addSentiment(w http.ResponseWriter, r *http.Request) {
 }
 
 func getSentiments(w http.ResponseWriter, r *http.Request) {
-	company := mux.Vars(r)["company"]
-	before := mux.Vars(r)["before"]
-	after := mux.Vars(r)["after"]
+	u := r.URL.Query()
+	company := u.Get("company")
+	before := u.Get("before")
+	after := u.Get("after")
+	fmt.Println("|C:", company, "|B:", before, "|A:", after)
+	if before == "" || after == "" || company == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(webError{Msg: "Received empty params."})
+		return
+	}
 	// make before and after ints
 	befr, err := strconv.Atoi(before)
 	if err != nil {
@@ -130,8 +150,9 @@ func main() {
 	}
 	fmt.Println("[DONE]")
 
-	myRouter := mux.NewRouter().StrictSlash(true)
+	myRouter := mux.NewRouter()
+	myRouter.HandleFunc("/", hello).Methods(http.MethodGet)
 	myRouter.HandleFunc("/sentiments", getSentiments).Methods(http.MethodGet)
 	myRouter.HandleFunc("/sentiments", addSentiment).Methods(http.MethodPost)
-	log.Fatal(http.ListenAndServe(":10000", myRouter))
+	log.Fatal(http.ListenAndServe("0.0.0.0:10000", myRouter))
 }
