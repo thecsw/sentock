@@ -30,18 +30,7 @@ export class StockGraph {
             this.sentimentApiCall(name)
                 .then(this.json2sentiments)
                 .then(sentiment => {
-                    // Scale sentiment data to make sense on the graph
                     this.numDays = sentiment.length
-
-                    const stockNumbers = stock.slice(-this.numDays).map(n => parseFloat(n))
-                    const maxStock = stockNumbers.reduce((a, b) => a > b ? a : b)
-                    const minStock = stockNumbers.reduce((a, b) => a < b ? a : b)
-                    const midStock = (maxStock + minStock) / 2
-                    const stockDiff = maxStock - minStock
-
-                    return sentiment.map(n => n * stockDiff / 2 + midStock)
-                })
-                .then(sentiment => {
                     this.draw(stock, sentiment, symbol)
                 })
         }).bind(this))
@@ -101,18 +90,35 @@ export class StockGraph {
         }
 
         // Generate a dataset
-        const dataset = (title, data, color) => ({label: title, data: data, fill: false, borderColor: color, lineTension: 0, pointRadius: 0})
+        const dataset = (title, data, color, side) => ({label: title, data: data, yAxisID: side, fill: false, borderColor: color, lineTension: 0, pointRadius: 0})
 
         return {
             type: 'line',
             data: {
                 labels: this.getLabels(this.numDays),
                 datasets: [
-                    dataset('Stock Price', stock, `rgb(${color.r}, ${color.g}, ${color.b})`),
-                    dataset('Sentiment Rating', sentiment, `rgb(${color.r+100}, ${color.g+100}, ${color.b+100})`)
+                    dataset('Stock Price', stock, `rgb(${color.r}, ${color.g}, ${color.b})`, 'left'),
+                    dataset('Sentiment Rating', sentiment, `rgb(${color.r+100}, ${color.g+100}, ${color.b+100})`, 'right')
                 ]
             },
-            options: {}
+            options: {
+                responsive: true,
+                hoverMode: 'index',
+                stacked: false,
+                scales: {
+                    yAxes: [{
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        id: 'left'
+                    }, {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        id: 'right'
+                    }],
+                }
+            }
         }
     }
 
