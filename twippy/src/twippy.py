@@ -3,6 +3,7 @@ import tweepy
 import json
 import time
 import databa
+import requests
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 #test out tweet streaming:
@@ -63,12 +64,12 @@ def got_tweet(tweet_id, text, created_at):
         return
     print(f"{text} | sentiment: {sentimentValue}", flush=True)
     try:
-        databa.add_sentiment(
-            company, 
-            tweet_id, 
-            text, 
-            created_at, 
-        sentimentValue)
+        # Make the call
+        requests.post("server:10000/api/sentiments", data={
+            "company":company,
+            "tweet_id":tweet_id,
+            "sentiment":float(sentimentValue),
+            "unix":int(created_at)})
     except:
         pass
 

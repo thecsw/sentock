@@ -6,7 +6,7 @@ var (
 	db     *gorm.DB
 	dbType = "postgres"
 	//connectionString = "postgresql://sandy:pass@db:5432/sentock?sslmode=disable"
-	connectionString = "postgresql://sandy:pass@127.0.0.1:5432/sentock?sslmode=disable"
+	connectionString = "postgresql://sandy:pass@postgres:5432/sentock?sslmode=disable"
 
 	cachedNames map[string]uint = make(map[string]uint)
 )
@@ -25,9 +25,4 @@ type Sentiment struct {
 	Unix      int     `json:"unix"`
 	Sentiment float64 `json:"sentiment"`
 	CompanyID uint    `json:"-"`
-}
-
-type dataPoint struct {
-	Unix         int
-	AveSentiment float64
 }

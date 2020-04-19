@@ -6,3 +6,4 @@ RUN \
  python3 -m pip install -r requirements.txt --no-cache-dir
 WORKDIR /code/src
 COPY src .
+CMD python twippy.py

@@ -53,7 +53,8 @@ func (*elephant) getSentiments(company string, before, after int) ([]Sentiment, 
 		Joins("inner join companies on companies.name = ?", company).
 		Where("unix > ?", after).
 		Where("unix < ?", before).
-		Find(&result). //descending?
+		Order("unix desc").
+		Find(&result).
 		Error
 }
 

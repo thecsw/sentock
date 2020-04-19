@@ -16,18 +16,14 @@ services:
           - 5050:80
         depends_on:
           - postgres
-          - api
+          - server
 
     twippy:
         build: ./twippy
         restart: "always"
+    
+    server:
+        build: ./server
+        restart: "always"
         depends_on:
           - postgres
-        entrypoint: ["python", "twippy.py"]
-
-    api:
-        build: ./twippy
-        restart: "on-failure"
-        depends_on:
-          - postgres
-        entrypoint: ["python", "api.py"]
