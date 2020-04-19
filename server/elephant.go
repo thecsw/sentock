@@ -16,7 +16,7 @@ var (
 	Elephant = &elephant{}
 )
 
-func (_ *elephant) connectDB(database string) (*gorm.DB, error) {
+func (*elephant) connectDB(database string) (*gorm.DB, error) {
 	const timeout = 1 * time.Minute
 	deadline := time.Now().Add(timeout)
 	tries := 0
@@ -33,7 +33,7 @@ func (_ *elephant) connectDB(database string) (*gorm.DB, error) {
 	return nil, fmt.Errorf("failed connect to the database after %d attempts", tries)
 }
 
-func (_ *elephant) createCompany(name string) error {
+func (*elephant) createCompany(name string) error {
 	return db.Create(&Company{Name: name}).Error
 }
 
@@ -47,7 +47,7 @@ func (e *elephant) createSentiment(tweetID string, unix int, sentiment float64, 
 	return ans, db.Create(ans).Error
 }
 
-func (_ *elephant) getSentiments(company string, before, after int) ([]Sentiment, error) {
+func (*elephant) getSentiments(company string, before, after int) ([]Sentiment, error) {
 	result := make([]Sentiment, 0, 128)
 	return result, db.Model(&Sentiment{}).
 		Joins("inner join companies on companies.name = ?", company).
@@ -57,15 +57,15 @@ func (_ *elephant) getSentiments(company string, before, after int) ([]Sentiment
 		Error
 }
 
-func (_ *elephant) close() error {
+func (*elephant) close() error {
 	return db.Close()
 }
 
-func (_ *elephant) autoMigrate() error {
+func (*elephant) autoMigrate() error {
 	return db.AutoMigrate(&Company{}, &Sentiment{}).Error
 }
 
-func (_ *elephant) ctod(company string) uint {
+func (*elephant) ctod(company string) uint {
 	companyID := uint(0)
 	var ok bool
 	if companyID, ok = cachedNames[company]; !ok {
