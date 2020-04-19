@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/sanity-io/litter"
 )
 
 type webError struct {
@@ -28,7 +27,7 @@ func hello(w http.ResponseWriter, r *http.Request) {
 }
 
 func addSentiment(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("--------- GOT REQUEST")
+	//fmt.Println("--------- GOT REQUEST")
 	payload := &sentimentPayload{}
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(payload)
@@ -37,7 +36,7 @@ func addSentiment(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(webError{Msg: "Failed decoding: " + err.Error()})
 		return
 	}
-	litter.Dump(payload)
+	//litter.Dump(payload)
 	if payload.TweetID == "" || payload.Unix == 0 || payload.Company == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(webError{Msg: "Received empty params."})
@@ -92,6 +91,7 @@ func getSentiments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(sentiments) == 0 {
+		fmt.Println("Got no sentiments from db query")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode([][]float64{[]float64{}})
 		return
@@ -110,15 +110,15 @@ func windowSmoothing(sentiments []Sentiment, front, window int) [][]float64 {
 	var backind, frontind int
 	sum := 0.0
 	size := 0
-	for front < sentiments[len(sentiments)-1].Unix {
+	for front < sentiments[len(sentiments)-1].Unix && frontind < len(sentiments)-1 {
 		//find new backind (subtracting as we go)
-		for sentiments[backind].Unix < back {
+		for sentiments[backind].Unix < back && backind < len(sentiments)-1 {
 			sum -= sentiments[backind].Sentiment
 			backind++
 			size--
 		}
 		//find new frontind (subtracting as we go)
-		for sentiments[frontind].Unix < front {
+		for sentiments[frontind].Unix < front && frontind < len(sentiments)-1 {
 			sum += sentiments[frontind].Sentiment
 			frontind++
 			size++
