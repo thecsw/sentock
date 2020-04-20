@@ -2,7 +2,6 @@
 import tweepy
 import json
 import time
-#import databa
 import requests
 import json
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
@@ -36,9 +35,6 @@ companies = ["McDonalds", "McDonald\'s",
              "Google", "\"Alphabet Inc\"", "Google\'s",
              "Facebook", "Facebook\'s",
              "Amazon", "Amazon\'s"]
-
-# Create the main table
-#databa.create_table()
 
 def got_tweet(tweet_id, text, created_at):
     sentimentValue = float(analyzer.polarity_scores(text)["compound"])
@@ -115,4 +111,3 @@ if __name__=="__main__":
         time.sleep(1800)
     print("Disconnecting..")
     mstream.disconnect()
-    #databa.close()
