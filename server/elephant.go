@@ -48,10 +48,11 @@ func (e *elephant) createSentiment(tweetID string, unix int, sentiment float64, 
 	return ans, db.Create(ans).Error
 }
 
-func (*elephant) getSentiments(company string, before, after int) ([]Sentiment, error) {
+func (e *elephant) getSentiments(company string, before, after int) ([]Sentiment, error) {
 	result := make([]Sentiment, 0, 128)
+	companyID := e.ctod(company)
 	return result, db.Model(&Sentiment{}).
-		Joins("inner join companies on companies.name = ?", company).
+		Where("company_id = ?", companyID).
 		Where("unix > ?", after).
 		Where("unix < ?", before).
 		Order("unix desc").
