@@ -43,20 +43,18 @@ func (e *elephant) createSentiment(tweetID string, unix int, sentiment float64, 
 		TweetID:   tweetID,
 		Unix:      unix,
 		Sentiment: sentiment,
-		CompanyID: e.ctod(company),
+		CompanyID: e.ctod(company, true),
 	}
 	return ans, db.Create(ans).Error
 }
 
 func (e *elephant) getSentiments(company string, before, after int) ([]Sentiment, error) {
 	result := make([]Sentiment, 0, 128)
-	companyID := e.ctod(company)
-	return result, db.Model(&Sentiment{}).
-		Where("company_id = ?", companyID).
+	return result, db.Model(e.fcompany(company)).
 		Where("unix > ?", after).
 		Where("unix < ?", before).
 		Order("unix desc").
-		Find(&result).
+		Related(&result).
 		Error
 }
 
@@ -68,7 +66,13 @@ func (*elephant) autoMigrate() error {
 	return db.AutoMigrate(&Company{}, &Sentiment{}).Error
 }
 
-func (e *elephant) ctod(company string) uint {
+func (e *elephant) fcompany(company string) *Company {
+	res := &Company{}
+	res.ID = e.ctod(company, false)
+	return res
+}
+
+func (e *elephant) ctod(company string, autocreate bool) uint {
 	companyID := uint(0)
 	var ok bool
 	if companyID, ok = cachedNames[company]; !ok {
@@ -76,6 +80,9 @@ func (e *elephant) ctod(company string) uint {
 		err := db.Where(&Company{Name: company}).First(res).Error
 		// Not found, automatically make one
 		if res.ID == 0 || err != nil {
+			if !autocreate {
+				return 0
+			}
 			c, err := e.createCompany(company)
 			if err != nil {
 				return 0

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -15,8 +14,6 @@ type elephantTestSuite struct {
 func (suite *elephantTestSuite) SetupSuite() {
 	var err error
 	db, err = suite.myelephant.connectDB("postgresql://sandy:pass@127.0.0.1:5432/sentock?sslmode=disable")
-	fmt.Println("DATABASE", db, err)
-	fmt.Println("SUITE -----", suite)
 	suite.Assert().Nil(err)
 	suite.Assert().NotNil(db)
 	suite.Assert().Nil(suite.myelephant.autoMigrate())

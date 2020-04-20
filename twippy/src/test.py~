@@ -1,5 +1,0 @@
-import pytest
-import tweepy
-
-def test_database():
-    pass
