@@ -77,10 +77,13 @@ func (suite *elephantTestSuite) TestCGetSentiments() {
 	sntsa, err := suite.myelephant.getSentiments("Company A", 20, 0)
 	suite.Assert().Nil(err)
 	suite.Assert().Equal(3, len(sntsa))
+	suite.Assert().Equal("twa3", sntsa[0].TweetID)
+	suite.Assert().Equal("twa2", sntsa[1].TweetID)
+	suite.Assert().Equal("twa1", sntsa[2].TweetID)
 
-	sntsb, err := suite.myelephant.getSentiments("Company B", 20, 0)
+	sntsb, err := suite.myelephant.getSentiments("Company B", 20, 1)
 	suite.Assert().Nil(err)
-	suite.Assert().Equal(3, len(sntsb))
+	suite.Assert().Equal(2, len(sntsb))
 
 	sntsc, err := suite.myelephant.getSentiments("Company C", 20, 0)
 	suite.Assert().Nil(err)

@@ -74,7 +74,7 @@ def got_tweet(tweet_id, text, created_at):
         "unix":int(created_at)
     }
     # Make the call
-    #requests.post(URL, data=json.dumps(payload))
+    requests.post(URL, data=json.dumps(payload))
     return company
 
 class SentStreamListener(tweepy.StreamListener):
@@ -115,4 +115,4 @@ if __name__=="__main__":
         time.sleep(1800)
     print("Disconnecting..")
     mstream.disconnect()
-    databa.close()
+    #databa.close()

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -97,7 +98,7 @@ func getSentiments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Do the window smoothing algorithm
-	front := (aftr / 60) * 60 //front starts at the minute of the furthest back value wanted
+	front := int((math.Max(float64(aftr/60), float64(sentiments[len(sentiments)-1].Unix/60)))) * 60 //front starts at the minute of the furthest back value (wanted or available)
 	points := windowSmoothing(sentiments, front, window)
 	// Submit the new one
 	w.WriteHeader(http.StatusOK)
@@ -107,24 +108,27 @@ func getSentiments(w http.ResponseWriter, r *http.Request) {
 func windowSmoothing(sentiments []Sentiment, front, window int) [][]float64 {
 	var end = make([][]float64, 0, 100)
 	back := front - window
-	var backind, frontind int
+	frontind := len(sentiments) - 1
+	backind := len(sentiments) - 1
 	sum := 0.0
 	size := 0
-	for front < sentiments[len(sentiments)-1].Unix && frontind < len(sentiments)-1 {
-		//find new backind (subtracting as we go)
-		for sentiments[backind].Unix < back && backind < len(sentiments)-1 {
-			sum -= sentiments[backind].Sentiment
-			backind++
-			size--
-		}
+	for front < sentiments[0].Unix && frontind > -1 {
 		//find new frontind (subtracting as we go)
-		for sentiments[frontind].Unix < front && frontind < len(sentiments)-1 {
+		for sentiments[frontind].Unix < front && frontind > -1 {
 			sum += sentiments[frontind].Sentiment
-			frontind++
+			frontind--
 			size++
 		}
-		//get new ave, assign to end
-		end = append(end, []float64{float64(front), sum / float64(size)})
+		//find new backind (subtracting as we go)
+		for sentiments[backind].Unix < back && backind > -1 {
+			sum -= sentiments[backind].Sentiment
+			backind--
+			size--
+		}
+		//get new average, assign to end
+		if size != 0 {
+			end = append(end, []float64{float64(front), sum / float64(size)})
+		}
 		//increment front (and back)
 		front += 60
 		back += 60

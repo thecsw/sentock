@@ -69,6 +69,9 @@ func (*elephant) autoMigrate() error {
 func (e *elephant) fcompany(company string) *Company {
 	res := &Company{}
 	res.ID = e.ctod(company, false)
+	if res.ID == 0 {
+		fmt.Println("failed to resolve company: ", company)
+	}
 	return res
 }
 
