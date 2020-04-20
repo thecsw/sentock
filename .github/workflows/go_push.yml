@@ -5,8 +5,6 @@ jobs:
   test:
     name: Testing
     runs-on: ubuntu-latest
-    env:
-      CALENDAR_TEST: Yes
     steps:
 
     - name: Set up Go 1.13
@@ -20,8 +18,8 @@ jobs:
 
     - name: Grabbing dependencies
       run: |
-        go get -v -t -u ./...
-        go get -v -t -u github.com/stretchr/testify      
+        go get -v -u ./...
+        go get -v -u github.com/stretchr/testify
     - name: Test
       run: |
         docker-compose up -d postgres
