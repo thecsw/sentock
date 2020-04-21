@@ -126,7 +126,7 @@ func windowSmoothing(sentiments []Sentiment, front, window int) [][]float64 {
 			size--
 		}
 		//get new average, assign to end
-		if size != 0 {
+		if size >= 15 {
 			end = append(end, []float64{float64(front), sum / float64(size)})
 		}
 		//increment front (and back)
