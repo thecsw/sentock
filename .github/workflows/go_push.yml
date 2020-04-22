@@ -14,14 +14,9 @@ jobs:
       id: go
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      uses: actions/checkout@v1
 
-    - name: Grabbing dependencies
-      run: |
-        go get -v -u ./server
-        go get -v -u github.com/stretchr/testify
+    - name: Get dependencies
+      run: ./deps.sh
     - name: Test
-      run: |
-        docker-compose up -d postgres
-        sleep 3
-        go test -v -count=1 ./...
+      run: ./test.sh
