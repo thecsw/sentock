@@ -1,2 +1,1 @@
-# sentock
-Sentimental Stocks
+![Sentocks](./sentocks.png)
