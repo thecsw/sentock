@@ -18,7 +18,7 @@ jobs:
 
     - name: Grabbing dependencies
       run: |
-        go get -v -u ./...
+        go get -v -u ./server
         go get -v -u github.com/stretchr/testify
     - name: Test
       run: |
