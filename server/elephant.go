@@ -48,8 +48,51 @@ func (e *elephant) createSentiment(tweetID string, unix int, sentiment float64, 
 	return ans, db.Create(ans).Error
 }
 
+func (e *elephant) createWindowAverage(unix []int, averages []float64, company string) ([]*Average, error) {
+	end := make([]*Average, len(unix))
+	var err error
+	for ind, time := range unix {
+		ave := &Average{
+			Unix:      time,
+			Average:   averages[ind],
+			CompanyID: e.ctod(company, true),
+		}
+		end = append(end, ave)
+		err = db.Create(ave).Error
+		if err != nil {
+			break
+		}
+	}
+	return end, err
+}
+
 func (e *elephant) getSentiments(company string, before, after int) ([]Sentiment, error) {
 	result := make([]Sentiment, 0, 128)
+	return result, db.Model(e.fcompany(company)).
+		Where("unix > ?", after).
+		Where("unix < ?", before).
+		Order("unix desc").
+		Related(&result).
+		Error
+}
+
+func (e *elephant) getLatestAverageSentiment(company string) (int, error) {
+	result := &Average{}
+	err := db.Model(e.fcompany(company)).
+		Order("unix desc").
+		Limit(1).
+		Related(result).
+		Error
+	if err != nil {
+		if err.Error() == "record not found" {
+			return 0, nil
+		}
+	}
+	return result.Unix, err
+}
+
+func (e *elephant) getAverages(company string, before, after int) ([]Average, error) {
+	result := make([]Average, 0, 128)
 	return result, db.Model(e.fcompany(company)).
 		Where("unix > ?", after).
 		Where("unix < ?", before).
@@ -63,7 +106,7 @@ func (*elephant) close() error {
 }
 
 func (*elephant) autoMigrate() error {
-	return db.AutoMigrate(&Company{}, &Sentiment{}).Error
+	return db.AutoMigrate(&Company{}, &Sentiment{}, &Average{}).Error
 }
 
 func (e *elephant) fcompany(company string) *Company {

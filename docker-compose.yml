@@ -29,3 +29,9 @@ services:
           - 10000:10000
         depends_on:
           - postgres
+
+    josh:
+        build: ./josh
+        restart: "always"
+        depends_on:
+          - server

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math"
 	"net/http"
 	"strconv"
 
@@ -22,13 +21,19 @@ type sentimentPayload struct {
 	Unix      int     `json:"unix"`
 }
 
+type windowAvePayload struct {
+	Company  string    `json:"company"`
+	Unix     []int     `json:"unix"`
+	Averages []float64 `json:"average"`
+}
+
 func hello(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(webError{Msg: "hello, world"})
 }
 
-func addSentiment(w http.ResponseWriter, r *http.Request) {
-	//fmt.Println("--------- GOT REQUEST")
+func addRawSentiment(w http.ResponseWriter, r *http.Request) {
+	// get sentiment data:
 	payload := &sentimentPayload{}
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(payload)
@@ -37,12 +42,13 @@ func addSentiment(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(webError{Msg: "Failed decoding: " + err.Error()})
 		return
 	}
-	//litter.Dump(payload)
+	// ensure reasonable inputs:
 	if payload.TweetID == "" || payload.Unix == 0 || payload.Company == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(webError{Msg: "Received empty params."})
 		return
 	}
+	// add sentiment to db:
 	res, err := Elephant.createSentiment(
 		payload.TweetID,
 		payload.Unix,
@@ -58,6 +64,95 @@ func addSentiment(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(*res)
 }
 
+func addWindowAverages(w http.ResponseWriter, r *http.Request) {
+	// get sentiment data:
+	payload := &windowAvePayload{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(payload)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(webError{Msg: "Failed decoding: " + err.Error()})
+		return
+	}
+	// ensure reasonable inputs:
+	if payload.Company == "" || len(payload.Unix) != len(payload.Averages) || len(payload.Unix) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(webError{Msg: "Received empty params."})
+		return
+	}
+	// add average sentiments to db:
+	_, err = Elephant.createWindowAverage(
+		payload.Unix,
+		payload.Averages,
+		payload.Company,
+	)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(webError{Msg: "Failed committing to DB: " + err.Error()})
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	//json.NewEncoder(w).Encode(*res)
+}
+
+func getRawSentiments(w http.ResponseWriter, r *http.Request) {
+	// get inputs:
+	u := r.URL.Query()
+	company, before, after := u.Get("company"), u.Get("before"), u.Get("after")
+	// ensure valid inputs:
+	if before == "" || after == "" || company == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(webError{Msg: "Received empty params."})
+		return
+	}
+	// make before and after ints
+	befr, err := strconv.Atoi(before)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(webError{Msg: "Error converting before to int: " + err.Error()})
+		return
+	}
+	aftr, err := strconv.Atoi(after)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(webError{Msg: "Error converting after to int: " + err.Error()})
+		return
+	}
+	// call Elephant.getSentiments(company, before, after)
+	sentiments, err := Elephant.getSentiments(company, befr, aftr)
+	// make and fill in array containing just the unix timestamp and the sentiment value:
+	points := make([][]float64, len(sentiments))
+	for ind, sent := range sentiments {
+		temp, _ := strconv.ParseFloat(sent.TweetID, 64)
+		//points[ind] = []float64{sent.Unix, sent.Sentiment, float64(strconv.ParseInt(sent.TweetID,10,0))}
+		points[ind] = []float64{float64(sent.Unix), sent.Sentiment, temp}
+	}
+	// return the list of datapoints:
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(points)
+}
+
+func getLatestSentiment(w http.ResponseWriter, r *http.Request) {
+	u := r.URL.Query()
+	company := u.Get("company")
+	if company == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(webError{Msg: "Received empty company."})
+		return
+	}
+	answer, err := Elephant.getLatestAverageSentiment(company)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Println("Error getting last average sentiment: " + err.Error())
+		json.NewEncoder(w).Encode(webError{Msg: "Error getting last average sentiment: " + err.Error()})
+		return
+	}
+	// return the list of datapoints:
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(answer)
+}
+
+// getSentiments is a blablabla
 func getSentiments(w http.ResponseWriter, r *http.Request) {
 	u := r.URL.Query()
 	company := u.Get("company")
@@ -82,58 +177,19 @@ func getSentiments(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(webError{Msg: "Error converting after to int: " + err.Error()})
 		return
 	}
-	//set moving average window size:
-	window := 3600 //window of 1 hour
-	// call Elephant.getSentiments(company, before, after)
-	sentiments, err := Elephant.getSentiments(company, befr, aftr-window)
+	//get the averaged data:
+	averages, err := Elephant.getAverages(company, befr, aftr)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(webError{Msg: "Error getting sentiments: " + err.Error()})
 		return
 	}
-	if len(sentiments) == 0 {
-		fmt.Println("Got no sentiments from db query")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode([][]float64{[]float64{}})
-		return
+	points := make([][]float64, len(averages))
+	for ind, data := range averages {
+		points[ind] = []float64{float64(data.Unix), data.Average}
 	}
-	// Do the window smoothing algorithm
-	front := int((math.Max(float64(aftr/60), float64(sentiments[len(sentiments)-1].Unix/60)))) * 60 //front starts at the minute of the furthest back value (wanted or available)
-	points := windowSmoothing(sentiments, front, window)
-	// Submit the new one
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(points) // [[...],[...],[...], ...]
-}
-
-func windowSmoothing(sentiments []Sentiment, front, window int) [][]float64 {
-	var end = make([][]float64, 0, 100)
-	back := front - window
-	frontind := len(sentiments) - 1
-	backind := len(sentiments) - 1
-	sum := 0.0
-	size := 0
-	for front < sentiments[0].Unix && frontind > -1 {
-		//find new frontind (subtracting as we go)
-		for sentiments[frontind].Unix < front && frontind > -1 {
-			sum += sentiments[frontind].Sentiment
-			frontind--
-			size++
-		}
-		//find new backind (subtracting as we go)
-		for sentiments[backind].Unix < back && backind > -1 {
-			sum -= sentiments[backind].Sentiment
-			backind--
-			size--
-		}
-		//get new average, assign to end
-		if size >= 15 {
-			end = append(end, []float64{float64(front), sum / float64(size)})
-		}
-		//increment front (and back)
-		front += 60
-		back += 60
-	}
-	return end
+	json.NewEncoder(w).Encode(points)
 }
 
 func main() {
@@ -157,6 +213,10 @@ func main() {
 	myRouter := mux.NewRouter()
 	myRouter.HandleFunc("/", hello).Methods(http.MethodGet)
 	myRouter.HandleFunc("/sentiments", getSentiments).Methods(http.MethodGet)
-	myRouter.HandleFunc("/sentiments", addSentiment).Methods(http.MethodPost)
+	myRouter.HandleFunc("/sentiments/raw", getRawSentiments).Methods(http.MethodGet)
+	myRouter.HandleFunc("/sentiments/latest", getLatestSentiment).Methods(http.MethodGet)
+	myRouter.HandleFunc("/sentiments/averages", addWindowAverages).Methods(http.MethodPost)
+	myRouter.HandleFunc("/sentiments", addRawSentiment).Methods(http.MethodPost)
+
 	log.Fatal(http.ListenAndServe("0.0.0.0:10000", myRouter))
 }
