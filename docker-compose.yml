@@ -9,6 +9,7 @@ services:
         volumes:
           #- ./data:/var/lib/postgres/data
           - /data/sentocks/postgres:/var/lib/postgres/data
+          #- ./data:/var/lib/postgres/data
 
     caddy:
         build: ./webpage
