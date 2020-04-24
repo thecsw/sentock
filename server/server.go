@@ -213,10 +213,10 @@ func main() {
 	myRouter := mux.NewRouter()
 	myRouter.HandleFunc("/", hello).Methods(http.MethodGet)
 	myRouter.HandleFunc("/sentiments", getSentiments).Methods(http.MethodGet)
+	myRouter.HandleFunc("/sentiments", addRawSentiment).Methods(http.MethodPost)
 	myRouter.HandleFunc("/sentiments/raw", getRawSentiments).Methods(http.MethodGet)
 	myRouter.HandleFunc("/sentiments/latest", getLatestSentiment).Methods(http.MethodGet)
 	myRouter.HandleFunc("/sentiments/averages", addWindowAverages).Methods(http.MethodPost)
-	myRouter.HandleFunc("/sentiments", addRawSentiment).Methods(http.MethodPost)
 
 	log.Fatal(http.ListenAndServe("0.0.0.0:10000", myRouter))
 }
