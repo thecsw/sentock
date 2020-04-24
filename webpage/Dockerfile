@@ -7,4 +7,4 @@ COPY front .
 # COPY --from=dev /code/docs-frontend .
 # COPY docs-backend /var/www/docs-backend
 COPY nginx.conf /etc/nginx/
-EXPOSE 10000
+EXPOSE 80
