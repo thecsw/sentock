@@ -42,8 +42,8 @@ export class StockGraph {
      */
 
     sentimentApiCall(name) {
-        const api = 'http://167.172.114.123:5050/api/sentiments'
-        const url = `${api}?company=${name}`
+        const api = '/api/sentiments'
+        const url = `${api}?company=${name}&before=1587759462&after=1587738600`
 
         return fetch(url).then(res => res.json())
     }
