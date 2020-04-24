@@ -13,7 +13,7 @@ services:
         build: ./webpage
         restart: unless-stopped
         ports:
-          - 80:80
+          - 5050:80
         depends_on:
           - postgres
           - server
