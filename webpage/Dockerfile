@@ -6,7 +6,10 @@ RUN \
 	npm install -g jsdoc
 WORKDIR /var/www
 COPY front .
-RUN jsdoc index.js
+RUN \
+	jsdoc *.js && \
+	mv out docs
+
 # WORKDIR /var/www/docs-frontend
 # COPY --from=dev /code/docs-frontend .
 # COPY docs-backend /var/www/docs-backend

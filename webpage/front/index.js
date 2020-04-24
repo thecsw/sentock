@@ -1,11 +1,15 @@
 import {StockGraph} from './StockGraph.js'
 
-// Initialize modals
+/**
+ * Initialize modals
+ */
 document.addEventListener('DOMContentLoaded',
     () => M.Modal.init(document.querySelectorAll('.modal'), {})
 )
 
-// Set up stock graphs
+/**
+ * Set up stock graphs
+ */
 new Vue({
     el: '#graphs',
     methods: {
