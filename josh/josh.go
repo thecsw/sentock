@@ -3,9 +3,12 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -64,17 +67,20 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 	buffer := make([][]float64, 0)
 	tries := 0
 	for {
+		log.Infof("[%s]: DOING A SWEEP", company)
 		waketime := time.Now()
 		//check how far calculations have come (assumes everything up to the most recent empty minute has already been calculated correctly):
 		resp, err := http.Get(latestsentiment + "?company=" + company)
 		//ensure we got something from the server
-		for ; err != nil || resp == nil || resp.StatusCode != 200; tries++ {
+		if err != nil || resp == nil || resp.StatusCode != 200 {
+			tries++
 			log.Error("failed to get latest sentiment for company: ", company, " on try #", tries, ", trying again in a bit...")
 			log.Error("[ERROR]:", err)
 			if resp != nil {
 				log.Error("[STATUS]:", resp.StatusCode)
 			}
 			time.Sleep(time.Duration(tries) * time.Second)
+			continue
 		}
 		//decode result:
 		var result int64
@@ -82,15 +88,6 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 		err = decoder.Decode(&result)
 		if err != nil {
 			log.Error("Failed to decode latest sentiment query response")
-			tries++
-			time.Sleep(time.Duration(tries) * time.Second)
-			continue
-		}
-		//make sure more than a minute has passed:
-		lastTime := time.Unix(result, 0)
-
-		if waketime.Sub(lastTime).Minutes() < 1.5 {
-			log.Error("failed to get raw sentiments from: " + rawsentiments + "?company=" + company + "&before=" + strconv.FormatInt(waketime.Unix(), 10) + "&after=" + strconv.FormatInt(result, 10) + ", waiting until next time")
 			tries++
 			time.Sleep(time.Duration(tries) * time.Second)
 			continue
@@ -125,6 +122,10 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 		buffer = append(rawsents, buffer...)
 		//calculate and fill in averages needed: (uses result (the last unix timestamp calculated) as the front
 		averages := windowSmoothing(buffer, result, 3600)
+		if len(averages) == 0 {
+			time.Sleep(2 * time.Minute)
+			continue
+		}
 		type windowAvePayload struct {
 			Company  string    `json:"company"`
 			Unix     []int     `json:"unix"`
@@ -148,7 +149,7 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 		if err != nil || resp == nil || resp.StatusCode != 200 {
 			log.Error("couldn't push average sentiments: [ERROR]:", err, "[RESPCODE:]", resp.StatusCode)
 			if resp != nil {
-				log.Error("[STATUS]:", resp.StatusCode)
+				log.Error("[STATUS]:", resp.StatusCode, " body: ", resp.Body)
 			}
 			resp.Body.Close()
 			tries++
@@ -163,12 +164,23 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 				break
 			}
 		}
+		log.Infof("[%s]: FINISHED MY SWEEP", company)
 		//sleep for 2 minutes:
 		time.Sleep(2 * time.Minute)
 	}
 }
 
 func main() {
+	log.Infoln("Gratiously waiting until other microservices become operational...")
+	// From https://play.golang.org/
+	// Clear the screen by printing \x0c.
+	const col = 30
+	bar := fmt.Sprintf("\x0c[%%-%vs]", col)
+	for i := 0; i < col; i++ {
+		log.Printf(bar, strings.Repeat("=", i)+">")
+		time.Sleep(100 * time.Millisecond)
+	}
+	log.Printf(bar+" Done!", strings.Repeat("=", col))
 	//do window averaging calculations:
 	companies := []string{
 		"McDonalds",
@@ -187,4 +199,5 @@ func main() {
 		go handleRealtime(companies[ind], globpostAves, globlatestsentiment, globrawsentiments)
 	}
 	wg.Wait()
+	os.Exit(1)
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -51,6 +52,9 @@ func (e *elephant) createSentiment(tweetID string, unix int, sentiment float64, 
 func (e *elephant) createWindowAverage(unix []int, averages []float64, company string) ([]*Average, error) {
 	end := make([]*Average, len(unix))
 	var err error
+	if len(averages) != len(unix) {
+		return nil, errors.New("Length of unix timestamps and averages don't match!")
+	}
 	for ind, time := range unix {
 		ave := &Average{
 			Unix:      time,
@@ -87,6 +91,7 @@ func (e *elephant) getLatestAverageSentiment(company string) (int, error) {
 		if err.Error() == "record not found" {
 			return 0, nil
 		}
+		return 0, err
 	}
 	return result.Unix, err
 }
