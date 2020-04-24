@@ -7,8 +7,8 @@ services:
           - 5432:5432
         restart: unless-stopped
         volumes:
-          - /data/sentocks/postgres:/var/lib/postgres/data
-
+          #  - /data/sentocks/postgres:/var/lib/postgres/data
+          - ./data:/var/lib/postgres/data
     nginx:
         build: ./webpage
         restart: unless-stopped
