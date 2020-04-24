@@ -147,7 +147,7 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 		client := &http.Client{}
 		resp, err = client.Do(req)
 		if err != nil || resp == nil || resp.StatusCode != 200 {
-			log.Error("couldn't push average sentiments: [ERROR]:", err, "[RESPCODE:]", resp.StatusCode)
+			log.Error("couldn't push average sentiments: [ERROR]:", err)
 			if resp != nil {
 				log.Error("[STATUS]:", resp.StatusCode, " body: ", resp.Body)
 			}
