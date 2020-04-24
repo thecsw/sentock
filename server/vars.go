@@ -26,3 +26,11 @@ type Sentiment struct {
 	Sentiment float64 `json:"sentiment"`
 	CompanyID uint    `json:"-"`
 }
+
+type Average struct {
+	gorm.Model `json:"-"`
+
+	Unix      int     `json:"unix"`
+	Average   float64 `json:"average"`
+	CompanyID uint    `json:"-"`
+}
