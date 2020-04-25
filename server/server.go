@@ -3,11 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
 type webError struct {
@@ -193,30 +194,50 @@ func getSentiments(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	log.Infof("Gratiously waiting until other microservices become operational...")
+	time.Sleep(5 * time.Minute)
+	log.Infoln("[DONE]")
+	// Create the list of private IPs for POST/DELETE
+	log.Infof("Initializing private IP blocks...")
+	initializePrivateIPs()
+	log.Infoln("[DONE]")
+
 	// Connecting to the DB
-	fmt.Printf("Connecting to the DB... ")
+	log.Infof("Connecting to the DB... ")
 	var err error
 	db, err = Elephant.connectDB(connectionString)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("[DONE]")
+	log.Infoln("[DONE]")
 
 	// Adding new tables
-	fmt.Printf("Migrating tables... ")
+	log.Infof("Migrating tables... ")
 	err = Elephant.autoMigrate()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("[DONE]")
+	log.Infoln("[DONE]")
 
+	// Create new router
+	log.Infof("Creating our HTTP router... ")
 	myRouter := mux.NewRouter()
+	log.Infoln("[DONE]")
+
+	log.Infof("Adding authorization middleware... ")
+	myRouter.Use(authMiddleware)
+	log.Infoln("[DONE]")
+
+	log.Infof("Adding HTTP routes... ")
 	myRouter.HandleFunc("/", hello).Methods(http.MethodGet)
 	myRouter.HandleFunc("/sentiments", getSentiments).Methods(http.MethodGet)
 	myRouter.HandleFunc("/sentiments", addRawSentiment).Methods(http.MethodPost)
 	myRouter.HandleFunc("/sentiments/raw", getRawSentiments).Methods(http.MethodGet)
 	myRouter.HandleFunc("/sentiments/latest", getLatestSentiment).Methods(http.MethodGet)
 	myRouter.HandleFunc("/sentiments/averages", addWindowAverages).Methods(http.MethodPost)
+	log.Infoln("[DONE]")
 
-	log.Fatal(http.ListenAndServe("0.0.0.0:10000", myRouter))
+	listenAddr := "0.0.0.0:10000"
+	log.Infof("Listening on %s... ", listenAddr)
+	log.Fatal(http.ListenAndServe(listenAddr, myRouter))
 }
