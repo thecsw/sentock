@@ -22,7 +22,7 @@ func authMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		}
 		// If the request is a non-GET, then bounce them off
-		if r.Method != "GET" {
+		if r.Method != http.MethodGet {
 			http.Error(w, "You are not authorized to perform this action.", http.StatusForbidden)
 			return
 		}
