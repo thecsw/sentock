@@ -20,6 +20,9 @@ services:
         depends_on:
           - postgres
           - server
+        volumes:
+          - "/data/sentocks/caddy/data:/root/.caddy"
+          - "/data/sentocks/caddy/logs:/var/log"
 
     twippy:
         build: ./twippy
