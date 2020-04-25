@@ -9,11 +9,14 @@ services:
         volumes:
           - /data/sentocks/postgres:/var/lib/postgres/data
 
-    nginx:
+    caddy:
         build: ./webpage
+        env_file: .env
         restart: unless-stopped
         ports:
-          - 5050:80
+          - 80:80
+          - 443:443
+          - 2015:2015
         depends_on:
           - postgres
           - server
