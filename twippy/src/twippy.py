@@ -102,6 +102,8 @@ class SentStreamListener(tweepy.StreamListener):
         return False
 
 if __name__=="__main__":
+    print("Gratiously waiting until other microservices become operational...")
+    time.sleep(5)
     print("Setting up listener...")
     sentStreamListener = SentStreamListener()
     mstream = tweepy.Stream(auth = api.auth, listener=sentStreamListener)

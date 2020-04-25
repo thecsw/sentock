@@ -137,7 +137,7 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 			data.Averages = append(data.Averages, val[1])
 		}
 		jsonAves, err := json.Marshal(data)
-		req, err := http.NewRequest("POST", postAves, bytes.NewBuffer(jsonAves))
+		req, err := http.NewRequest(http.MethodPost, postAves, bytes.NewBuffer(jsonAves))
 		if err != nil {
 			log.Error("Couldn't jsonify the averages list!")
 			tries++
