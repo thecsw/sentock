@@ -21,11 +21,12 @@ func authMiddleware(next http.Handler) http.Handler {
 		if isPrivateIP(net.ParseIP(remoteIP)) {
 			next.ServeHTTP(w, r)
 		}
-		// If the request is a non-GET, then bounce them off
-		if r.Method != http.MethodGet {
-			http.Error(w, "You are not authorized to perform this action.", http.StatusForbidden)
-			return
+		// If the request is a get, let them through
+		if r.Method == http.MethodGet {
+			next.ServeHTTP(w, r)
 		}
+		// If not private and non-get, bounce them off
+		http.Error(w, "You are not authorized to perform this action.", http.StatusForbidden)
 	})
 }
 
