@@ -7,20 +7,17 @@ import json
 import os
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-# test out tweet streaming:
-consumer_token = "XWYNu0pXy3FujGTFs5Zz2sI3w"
-consumer_secret = "u4lOvuenKT5rM5fvadgbe9MmRwUTK6NIcf6ZaB1HCRBKYX3lkB"
-access_token = "1245747355397349386-jnDu79yI1J9UEKcFTaG1xV5HcvdZPo"
-access_token_secret = "nK1S3NvBI0Ki5bvKDpeZci2y5A3rk0hsimOcgrS5YyGki"
 
-auth = tweepy.OAuthHandler(consumer_token, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-
-api = tweepy.API(auth)
+# Tweepy auth tokens
+CONSUMER_TOKEN = os.environ["CONSUMER_TOKEN"]
+CONSUMER_SECRET = os.environ["CONSUMER_SECRET"]
+ACCESS_TOKEN = os.environ["ACCESS_TOKEN"]
+ACCESS_TOKEN_SECRET = os.environ["ACCESS_TOKEN_SECRET"]
 
 # sentiment analyzer stuff:
 ANALYZER = SentimentIntensityAnalyzer()
 
+# URL to submit raw sentiments
 URL = "http://server:10000/sentiments"
 SESSION = requests.session()
 
@@ -109,15 +106,20 @@ class SentStreamListener(tweepy.StreamListener):
         return False
 
 
+# Entrypoint into twippy
 if __name__ == "__main__":
     print("POTUS THE 45 SENTIMENT ANALYSIS")
     print("Gratiously waiting until other microservices become operational...")
     time.sleep(5)
     print("Setting up listener...")
+    AUTH = tweepy.OAuthHandler(CONSUMER_TOKEN, CONSUMER_SECRET)
+    AUTH.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+    API = tweepy.API(AUTH)
     sentStreamListener = SentStreamListener()
-    mstream = tweepy.Stream(auth=api.auth, listener=sentStreamListener)
-    mstream.filter(track=companies, is_async=False)
+    mstream = tweepy.Stream(auth=API.auth, listener=sentStreamListener)
+    mstream.filter(track=COMPANIES, is_async=False)
     print("waiting...")
+    # Sleep indefinitely
     while True:
         time.sleep(1800)
     print("Disconnecting..")
