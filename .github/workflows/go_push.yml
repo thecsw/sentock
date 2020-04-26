@@ -20,3 +20,20 @@ jobs:
       run: ./deps.sh
     - name: Test
       run: ./test.sh
+
+  build:
+    name: Building
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
+    - name: Docker Compose Build
+      run: docker-compose build
