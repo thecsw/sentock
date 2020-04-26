@@ -4,6 +4,7 @@ import json
 import time
 import requests
 import json
+import os
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 #test out tweet streaming:
@@ -69,8 +70,9 @@ def got_tweet(tweet_id, text, created_at):
         "sentiment":float(sentimentValue),
         "unix":int(created_at)
     }
+    headers = {"webkey": os.environ["WEB_KEY"]}
     # Make the call
-    requests.post(URL, data=json.dumps(payload))
+    requests.post(URL, data=json.dumps(payload), headers=headers)
     return company
 
 class SentStreamListener(tweepy.StreamListener):

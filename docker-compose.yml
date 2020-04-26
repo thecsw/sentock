@@ -27,11 +27,13 @@ services:
 
     twippy:
         build: ./twippy
+        env_file: .env
         restart: "always"
     
     server:
         build: ./server
         restart: "always"
+        env_file: .env
         ports:
           - 127.0.0.1:10000:10000
         depends_on:
@@ -39,6 +41,7 @@ services:
 
     josh:
         build: ./josh
+        env_file: .env
         restart: "always"
         depends_on:
           - server
