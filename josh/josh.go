@@ -187,7 +187,7 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 		if len(averages) == 0 {
 			time.Sleep(2 * time.Minute)
 			continue
-    }
+    		}
 
 		//post resulting calculations to server:
 		err = postAverages(company, postAves, averages)
