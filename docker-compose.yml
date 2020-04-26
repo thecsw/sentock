@@ -18,7 +18,6 @@ services:
           - 443:443
           - 2015:2015
         depends_on:
-          - postgres
           - server
         volumes:
           - "/data/sentocks/caddy/data:/root/.caddy"
@@ -28,7 +27,16 @@ services:
         build: ./twippy
         env_file: .env
         restart: "always"
-    
+        depends_on:
+          - server
+
+    trump:
+        build: ./trump
+        env_file: .env
+        restart: "always"
+        depends_on:
+          - server
+
     server:
         build: ./server
         restart: "always"

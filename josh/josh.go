@@ -230,6 +230,7 @@ func main() {
 	log.Printf(bar+" Done!", strings.Repeat("=", col))
 	//do window averaging calculations:
 	companies := []string{
+		"Trump",
 		"McDonalds",
 		"Fedex",
 		"Chipotle",
