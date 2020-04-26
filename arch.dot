@@ -1,0 +1,23 @@
+digraph architecture {
+  rankdir=LR;
+
+  subgraph user_side {
+    front_end -> stock_api
+    front_end -> caddy
+  }
+
+  subgraph services {
+      josh -> server
+      bobby -> server
+      caddy -> {server, docs}
+      twippy -> server
+      twippy -> twitter_api
+      trump -> server
+
+      {rank=same; josh, twippy, caddy, bobby};
+  }
+
+  subgraph low_level {
+      server -> {postgres, auth_api}
+  }
+}
