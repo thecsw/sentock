@@ -1,10 +1,2 @@
 tweepy
 vaderSentiment
-datetime
-psycopg2
-Flask
-pycco
-matplotlib
-scipy
-requests
-mpld3
