@@ -27,7 +27,7 @@ SESSION = requests.session()
 # http://www.citypages.com/news/the-20-best-nicknames-for-donald-trump-so-far/389377462
 # https://www.cheatsheet.com/entertainment/15-hilarious-nicknames-donald-trump-has-been-called.html/
 # https://medium.com/@allanishac/50-nicknames-for-donald-trump-you-wont-be-hearing-on-fox-news-7b7a5ca1b1b1
-companies = [
+COMPANIES = [
     "Trump",
     "Trump's",
     "POTUS",
@@ -53,7 +53,7 @@ companies = [
 
 def got_tweet(tweet_id, text, created_at):
     found = False
-    for company in companies:
+    for company in COMPANIES:
         if company.lower() in text.lower():
             found = True
             break
@@ -62,6 +62,7 @@ def got_tweet(tweet_id, text, created_at):
     sentimentValue = float(ANALYZER.polarity_scores(text)["compound"])
     if sentimentValue == 0:
         return "No sentiment value"
+    print(f"{text} | sentiment: {sentimentValue}", flush=True)
     payload = {
         "company": "Trump",
         "tweet_id": tweet_id,
