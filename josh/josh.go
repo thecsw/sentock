@@ -138,6 +138,7 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 		}
 		jsonAves, err := json.Marshal(data)
 		req, err := http.NewRequest(http.MethodPost, postAves, bytes.NewBuffer(jsonAves))
+		req.Header.Add("webkey", os.Getenv("WEB_KEY"))
 		if err != nil {
 			log.Error("Couldn't jsonify the averages list!")
 			tries++

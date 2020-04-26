@@ -197,10 +197,6 @@ func main() {
 	log.Infof("Gratiously waiting until other microservices become operational...")
 	time.Sleep(5 * time.Second)
 	log.Infoln("[DONE]")
-	// Create the list of private IPs for POST/DELETE
-	log.Infof("Initializing private IP blocks...")
-	initializePrivateIPs()
-	log.Infoln("[DONE]")
 
 	// Connecting to the DB
 	log.Infof("Connecting to the DB... ")
