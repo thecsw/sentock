@@ -1,6 +1,6 @@
 FROM golang
 WORKDIR /app
 COPY . .
-RUN go get -v -u ./...
+RUN go get -v ./...
 RUN go build -v
 CMD ./josh

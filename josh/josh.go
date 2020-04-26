@@ -187,7 +187,7 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 		if len(averages) == 0 {
 			time.Sleep(2 * time.Minute)
 			continue
-		}
+    }
 
 		//post resulting calculations to server:
 		err = postAverages(company, postAves, averages)
@@ -197,7 +197,7 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 			time.Sleep(time.Duration(tries) * time.Second)
 			continue
 		}
-
+    
 		//clean up end of buffer if need be:
 		for ind := 0; ind < len(buffer); ind++ {
 			if averages[0][0]-buffer[ind][0] > 3600 {
