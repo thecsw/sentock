@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -62,6 +63,86 @@ func windowSmoothing(raws [][]float64, front, window int64) [][]float64 {
 	return end
 }
 
+// getLatest queries the server in order to get the latest average sentiment calculated from ip=latestsentiment and company=company
+func getLatest(company, latestsentiment string) (int64, error) {
+	//check how far calculations have come (assumes everything up to the most recent empty minute has already been calculated correctly):
+	resp, err := http.Get(latestsentiment + "?company=" + company)
+	//ensure good response:
+	if err != nil {
+		return -1, errors.New("Error getting latest sentiment from server: " + err.Error())
+	}
+	if resp == nil {
+		return -1, errors.New("Unkown error occured getting latest sentiment from server (nil response)")
+	}
+	if resp.StatusCode != 200 {
+		return -1, errors.New("Got unexpected status code while trying to retrieve latest sentiment: " + strconv.Itoa(resp.StatusCode))
+	}
+	//decode result:
+	var result int64
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&result)
+	if err != nil {
+		return -1, errors.New("Failed to decode latest sentiment query response: " + err.Error())
+	}
+	return result, nil
+}
+
+func getrawSentiments(company, rawSentsIp string, waketime time.Time, latest, windowSize int64) ([][]float64, error) {
+	//get list of new sentiments:
+	values := url.Values{}
+	values.Set("company", company)
+	values.Set("before", strconv.FormatInt(waketime.Unix(), 10))
+	values.Set("after", strconv.FormatInt(latest-windowSize, 10)) //get the data from an hour before last entry (just in case buffer is empty)
+	resp, err := http.Get(rawSentsIp + "?" + values.Encode())
+	//ensure good response:
+	if err != nil {
+		return [][]float64{}, errors.New("Error occured trying to get rawSentiments: " + err.Error())
+	}
+	if resp == nil {
+		return [][]float64{}, errors.New("Unexpected error occured trying to get rawSentiments (nil response)")
+	}
+	if resp.StatusCode != 200 {
+		return [][]float64{}, errors.New("Got unexpected status code while trying to get rawSentiments: " + strconv.Itoa(resp.StatusCode))
+	}
+	//decode result:
+	var rawsents [][]float64
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&rawsents)
+	if err != nil {
+		return [][]float64{}, errors.New("Error occured while trying to parse rawSentiments response: " + err.Error())
+	}
+	return rawsents, nil
+}
+
+func postAverages(company, postAves string, averages [][]float64) error {
+	type windowAvePayload struct {
+		Company  string    `json:"company"`
+		Unix     []int     `json:"unix"`
+		Averages []float64 `json:"average"`
+	}
+	data := &windowAvePayload{Company: company, Unix: []int{}, Averages: []float64{}}
+	for _, val := range averages {
+		data.Unix = append(data.Unix, int(val[0]))
+		data.Averages = append(data.Averages, val[1])
+	}
+	jsonAves, err := json.Marshal(data)
+	req, err := http.NewRequest(http.MethodPost, postAves, bytes.NewBuffer(jsonAves))
+	if err != nil {
+		return errors.New("Couldn't jsonify the averages list when trying to post averages")
+	}
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil || resp == nil {
+		return errors.New("Couldn't post the average sentiments: (either nil response or non-nil error: " + err.Error() + ")")
+	}
+	if resp.StatusCode != 200 {
+		resp.Body.Close()
+		return errors.New("recieved unexpected status code while trying to post averages: " + strconv.Itoa(resp.StatusCode))
+	}
+	resp.Body.Close()
+	return nil
+}
+
 func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 	defer wg.Done()
 	buffer := make([][]float64, 0)
@@ -69,47 +150,26 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 	for {
 		log.Infof("[%s]: DOING A SWEEP", company)
 		waketime := time.Now()
-		//check how far calculations have come (assumes everything up to the most recent empty minute has already been calculated correctly):
-		resp, err := http.Get(latestsentiment + "?company=" + company)
-		//ensure we got something from the server
-		if err != nil || resp == nil || resp.StatusCode != 200 {
-			tries++
-			log.Error("failed to get latest sentiment for company: ", company, " on try #", tries, ", trying again in a bit...")
-			log.Error("[ERROR]:", err)
-			if resp != nil {
-				log.Error("[STATUS]:", resp.StatusCode)
-			}
-			time.Sleep(time.Duration(tries) * time.Second)
-			continue
-		}
-		//decode result:
-		var result int64
-		decoder := json.NewDecoder(resp.Body)
-		err = decoder.Decode(&result)
+
+		//get latest sentiment calculated:
+		result, err := getLatest(company, latestsentiment)
 		if err != nil {
-			log.Error("Failed to decode latest sentiment query response")
+			log.Error("Company: " + company + ", Try #" + strconv.Itoa(tries) + err.Error())
 			tries++
 			time.Sleep(time.Duration(tries) * time.Second)
 			continue
 		}
-		//get list of new sentiments:
-		values := url.Values{}
-		values.Set("company", company)
-		values.Set("before", strconv.FormatInt(waketime.Unix(), 10))
-		values.Set("after", strconv.FormatInt(result-3600, 10)) //get the data from an hour before last entry (just in case buffer is empty)
-		resp, err = http.Get(rawsentiments + "?" + values.Encode())
-		// Don't forget to check resp.StatusCode for 200
-		if err != nil || resp.StatusCode != 200 {
-			log.Error("Couldn't access rawsentiments from: " + rawsentiments + "?" + values.Encode())
+
+		//get new unprocessed sentiments:
+		rawsents, err := getrawSentiments(company, rawsentiments, waketime, result, 3600)
+		if err != nil {
+			log.Error("Company: " + company + ", Try #" + strconv.Itoa(tries) + err.Error())
 			tries++
 			time.Sleep(time.Duration(tries) * time.Second)
 			continue
 		}
-		var rawsents [][]float64
-		decoder = json.NewDecoder(resp.Body)
-		err = decoder.Decode(&rawsents)
-		//ensure rawsents has no repeats and each element has the expected size of 3 (Unix, Sentiment, TweetID)
-		//fmt.Println("Length of rawSentiments returned: ", len(rawsents))
+
+		//if we already have things in the buffer, ensure rawsents has no repeats and each element has the expected size of 3 (Unix, Sentiment, TweetID)
 		if len(buffer) > 0 {
 			for ind, point := range rawsents {
 				if len(point) < 3 || point[2] == buffer[0][2] {
@@ -120,44 +180,24 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 		}
 		//prepend results to buffer: (so that buffer always remains in descending order)
 		buffer = append(rawsents, buffer...)
+
 		//calculate and fill in averages needed: (uses result (the last unix timestamp calculated) as the front
 		averages := windowSmoothing(buffer, result, 3600)
+		//if we got no tweets back, proceed like normal
 		if len(averages) == 0 {
 			time.Sleep(2 * time.Minute)
 			continue
-		}
-		type windowAvePayload struct {
-			Company  string    `json:"company"`
-			Unix     []int     `json:"unix"`
-			Averages []float64 `json:"average"`
-		}
-		data := &windowAvePayload{Company: company, Unix: []int{}, Averages: []float64{}}
-		for _, val := range averages {
-			data.Unix = append(data.Unix, int(val[0]))
-			data.Averages = append(data.Averages, val[1])
-		}
-		jsonAves, err := json.Marshal(data)
-		req, err := http.NewRequest(http.MethodPost, postAves, bytes.NewBuffer(jsonAves))
-		req.Header.Add("webkey", os.Getenv("WEB_KEY"))
+    		}
+
+		//post resulting calculations to server:
+		err = postAverages(company, postAves, averages)
 		if err != nil {
-			log.Error("Couldn't jsonify the averages list!")
+			log.Error("Company: " + company + ", Try #" + strconv.Itoa(tries) + err.Error())
 			tries++
 			time.Sleep(time.Duration(tries) * time.Second)
 			continue
 		}
-		client := &http.Client{}
-		resp, err = client.Do(req)
-		if err != nil || resp == nil || resp.StatusCode != 200 {
-			log.Error("couldn't push average sentiments: [ERROR]:", err)
-			if resp != nil {
-				log.Error("[STATUS]:", resp.StatusCode, " body: ", resp.Body)
-			}
-			resp.Body.Close()
-			tries++
-			time.Sleep(time.Duration(tries) * time.Second)
-			continue
-		}
-		resp.Body.Close()
+    
 		//clean up end of buffer if need be:
 		for ind := 0; ind < len(buffer); ind++ {
 			if averages[0][0]-buffer[ind][0] > 3600 {
@@ -166,8 +206,14 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 			}
 		}
 		log.Infof("[%s]: FINISHED MY SWEEP", company)
+
 		//sleep for 2 minutes:
 		time.Sleep(2 * time.Minute)
+
+		//reset tries to 3:
+		if tries > 3 {
+			tries = 3
+		}
 	}
 }
 
