@@ -1,6 +1,9 @@
 digraph architecture {
   rankdir=LR;
 
+  node[fillcolor="#FF4081" style="filled" fontcolor="white"];
+  front_end[label="VueJS"];
+
   subgraph user_side {
     front_end -> stock_api
     front_end -> caddy
