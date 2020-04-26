@@ -7,25 +7,20 @@ import json
 import os
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-# test out tweet streaming:
-CONSUMER_TOKEN = "XWYNu0pXy3FujGTFs5Zz2sI3w"
-CONSUMER_SECRET = "u4lOvuenKT5rM5fvadgbe9MmRwUTK6NIcf6ZaB1HCRBKYX3lkB"
-ACCESS_TOKEN = "1245747355397349386-jnDu79yI1J9UEKcFTaG1xV5HcvdZPo"
-ACCESS_TOKEN_SECRET = "nK1S3NvBI0Ki5bvKDpeZci2y5A3rk0hsimOcgrS5YyGki"
-
-AUTH = tweepy.OAuthHandler(CONSUMER_TOKEN, CONSUMER_SECRET)
-AUTH.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-
-API = tweepy.API(AUTH)
+# Tweepy auth tokens
+CONSUMER_TOKEN = os.environ["CONSUMER_TOKEN"]
+CONSUMER_SECRET = os.environ["CONSUMER_SECRET"]
+ACCESS_TOKEN = os.environ["ACCESS_TOKEN"]
+ACCESS_TOKEN_SECRET = os.environ["ACCESS_TOKEN_SECRET"]
 
 # sentiment analyzer stuff:
 ANALYZER = SentimentIntensityAnalyzer()
 
-TEXTS = []
-
+# URL to submit raw sentiments
 URL = "http://server:10000/sentiments"
 SESSION = requests.session()
 
+# The actual search keywords and their respective companies
 KEYWORDS = {
     "McDonalds": "McDonalds",
     "McDonald's": "McDonalds",
@@ -52,7 +47,7 @@ KEYWORDS = {
 # Get all unique companies for keywords
 COMPANIES = list(set(KEYWORDS.keys()))
 
-
+# Handler for successfully matched tweets
 def got_tweet(tweet_id, text, created_at):
     sentimentValue = float(ANALYZER.polarity_scores(text)["compound"])
     if sentimentValue == 0:
@@ -81,7 +76,10 @@ def got_tweet(tweet_id, text, created_at):
     return company
 
 
+# The actual listener handler for tweepy
 class SentStreamListener(tweepy.StreamListener):
+
+    # If successfully received tweet, proceed
     def on_status(self, status):
         # Get the actual payload
         msg = status._json
@@ -114,14 +112,19 @@ class SentStreamListener(tweepy.StreamListener):
         return False
 
 
+# Entrypoint into twippy
 if __name__ == "__main__":
     print("Gratiously waiting until other microservices become operational...")
     time.sleep(5)
     print("Setting up listener...")
+    AUTH = tweepy.OAuthHandler(CONSUMER_TOKEN, CONSUMER_SECRET)
+    AUTH.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+    API = tweepy.API(AUTH)
     sentStreamListener = SentStreamListener()
     mstream = tweepy.Stream(auth=API.auth, listener=sentStreamListener)
     mstream.filter(track=COMPANIES, is_async=False)
     print("waiting...")
+    # Sleep indefinitely
     while True:
         time.sleep(1800)
     print("Disconnecting..")
