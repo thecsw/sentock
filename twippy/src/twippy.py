@@ -50,7 +50,7 @@ KEYWORDS = {
 }
 
 # Get all unique companies for keywords
-COMPANIES = list(set(KEYWORDS.values()))
+COMPANIES = list(set(KEYWORDS.keys()))
 
 
 def got_tweet(tweet_id, text, created_at):
