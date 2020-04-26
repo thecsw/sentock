@@ -16,3 +16,9 @@ Below is an example of how it looks for some companies:
 
 The question is, **is there a correlation between sentiments 
 and the stock market?**
+
+## Microservice architecture
+
+This is the layout of basic services we have running
+
+![Architecture](./arch.png)
