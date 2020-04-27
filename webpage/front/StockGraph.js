@@ -112,12 +112,7 @@ export class StockGraph {
         const api = 'https://sentocks.sandyuraz.com/api/sentiments'
         const url = `${api}?company=${name}&before=${after}&after=${before}`
 
-        return fetch(url).then(res => {
-            console.log('res', res)
-            const json = res.json()
-            console.log('json', json)
-            return json
-        })
+        return fetch(url).then(res => res.json())
     }
 
     /**
@@ -140,8 +135,8 @@ export class StockGraph {
      */
     draw(stock, sentiment, symbol) {
 
-        console.log(symbol, 'stock', stock.slice(-this.numDays))
-        console.log(symbol, 'sentiment', sentiment.slice(-this.numDays))
+        // console.log(symbol, 'stock', stock.slice(-this.numDays))
+        // console.log(symbol, 'sentiment', sentiment.slice(-this.numDays))
 
         let chart = this.getChart(
             stock.slice(-this.numDays),
