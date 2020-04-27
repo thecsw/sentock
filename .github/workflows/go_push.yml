@@ -16,7 +16,7 @@ jobs:
     - name: Get dependencies
       run: ./scripts/deps.sh
     - name: Test
-      run: cp .env.example .env && ./test.sh
+      run: cp .env.example .env && ./scripts/test.sh
 
   docker-build:
     name: Docker Building
