@@ -3,7 +3,7 @@ on: push
 jobs:
 
   go-test:
-    name: Testing
+    name: Go Testing
     runs-on: ubuntu-latest
     steps:
     - name: Set up Go 1.13
@@ -33,7 +33,7 @@ jobs:
       run: cp .env.example .env && docker-compose build
 
   pytest:
-    name: Python testing
+    name: Python Testing
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
