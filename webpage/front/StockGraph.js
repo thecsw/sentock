@@ -43,6 +43,7 @@ export class StockGraph {
 
     sentimentApiCall(name) {
         let d = new Date
+        d.setUTCSeconds(0)
         let before, after
 
         const day = d.getDay(),
@@ -53,66 +54,70 @@ export class StockGraph {
 
         if(day === 0 || (day === 1 && before930)) {
             //last friday
-            d.setDate(new Date().getDate() + (6 - new Date().getDay() - 1) - 7)
+            d.setUTCDate(new Date().getUTCDate() + (6 - new Date().getUTCDay() - 1) - 7)
 
-            d.setHours(9)
-            d.setMinutes(30)
+            d.setUTCHours(9+4)
+            d.setUTCMinutes(30)
             before = Math.round(d.getTime()/1000)
 
-            d.setHours(4)
-            d.setMinutes(0)
+            d.setUTCHours(12+4+4)
+            d.setUTCMinutes(0)
             after = Math.round(d.getTime()/1000)
 
         } else if(day === 6) {
             // yesterday
-            d.setDay(5)
+            d.setUTCDay(5)
 
-            d.setHours(9)
-            d.setMinutes(30)
+            d.setUTCHours(9+4)
+            d.setUTCMinutes(30)
             before = Math.round(d.getTime()/1000)
 
-            d.setHours(4)
-            d.setMinutes(0)
+            d.setUTCHours(12+4+4)
+            d.setUTCMinutes(0)
             after = Math.round(d.getTime()/1000)
         } else {
             //weekday
             if(before930) {
                 //before open
-                d.setDay(d.getDay() - 1) // get data from yesterday
+                d.setUTCDay(d.getUTCDay() - 1) // get data from yesterday
 
-                d.setHours(9)
-                d.setMinutes(30)
+                d.setUTCHours(9+4)
+                d.setUTCMinutes(30)
                 before = Math.round(d.getTime()/1000)
 
-                d.setHours(4)
-                d.setMinutes(0)
+                d.setUTCHours(12+4+4)
+                d.setUTCMinutes(0)
                 after = Math.round(d.getTime()/1000)
 
             } else if(hour > 4) {
                 //after close
-                d.setHours(9)
-                d.setMinutes(30)
+                d.setUTCHours(9+4)
+                d.setUTCMinutes(30)
                 before = Math.round(d.getTime()/1000)
 
-                d.setHours(4)
-                d.setMinutes(0)
+                d.setUTCHours(12+4+4)
+                d.setUTCMinutes(0)
                 after = Math.round(d.getTime()/1000)
 
             } else {
                 //during day
                 after = Math.round(d.getTime()/1000)
 
-                d.setHours(9)
-                d.setMinutes(30)
+                d.setUTCHours(9+4)
+                d.setUTCMinutes(30)
                 before = Math.round(d.getTime()/1000)
-
             }
         }
 
-        const api = '/api/sentiments'
-        const url = `${api}?company=${name}&before=${before}&after=${after}`
+        const api = 'https://sentocks.sandyuraz.com/api/sentiments'
+        const url = `${api}?company=${name}&before=${after}&after=${before}`
 
-        return fetch(url).then(res => res.json())
+        return fetch(url).then(res => {
+            console.log('res', res)
+            const json = res.json()
+            console.log('json', json)
+            return json
+        })
     }
 
     /**
