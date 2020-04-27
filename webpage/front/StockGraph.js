@@ -42,8 +42,78 @@ export class StockGraph {
      */
 
     sentimentApiCall(name) {
+        let d = new Date
+        let before, after
+
+        const day = d.getDay(),
+              hour = d.getUTCHours() - 4, //get EDT
+              minute = d.getUTCMinutes(),
+
+              before930 = hour < 9 || (hour === 9 && minute < 30)
+
+        if(
+            day === 0 ||
+            (day === 1 && before930)
+        ) {
+            //last friday
+            d.setDate(new Date().getDate() + (6 - new Date().getDay() - 1) - 7)
+
+            d.setHours(9)
+            d.setMinutes(30)
+            before = d.getTime()
+
+            d.setHours(4)
+            d.setMinutes(0)
+            after = d.getTime()
+
+        } else if(day === 6) {
+            // yesterday
+            d.setDay(5)
+
+            d.setHours(9)
+            d.setMinutes(30)
+            before = d.getTime()
+
+            d.setHours(4)
+            d.setMinutes(0)
+            after = d.getTime()
+        } else {
+            //weekday
+            if(before930) {
+                //before open
+                d.setDay(d.getDay() - 1) // get data from yesterday
+
+                d.setHours(9)
+                d.setMinutes(30)
+                before = d.getTime()
+
+                d.setHours(4)
+                d.setMinutes(0)
+                after = d.getTime()
+
+            } else if(hour > 4) {
+                //after close
+                d.setHours(9)
+                d.setMinutes(30)
+                before = d.getTime()
+
+                d.setHours(4)
+                d.setMinutes(0)
+                after = d.getTime()
+
+            } else {
+                //during day
+                after = d.getTime()
+
+                d.setHours(9)
+                d.setMinutes(30)
+                before = d.getTime()
+
+            }
+        }
+
         const api = '/api/sentiments'
-        const url = `${api}?company=${name}&before=1587762000&after=1587738600`
+        const url = `${api}?company=${name}&before=${before}&after=${after}`
 
         return fetch(url).then(res => res.json())
     }
