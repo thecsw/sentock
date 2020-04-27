@@ -28,6 +28,13 @@ services:
         build: ./twippy
         env_file: .env
         restart: "always"
+        depends_on:
+          - server
+
+    tokentest:
+        build: ./twippy
+        env_file: .env
+        entrypoint: python tokentest.py
     
     server:
         build: ./server

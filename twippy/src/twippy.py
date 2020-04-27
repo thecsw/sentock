@@ -7,12 +7,6 @@ import json
 import os
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-# Tweepy auth tokens
-CONSUMER_TOKEN = os.environ["CONSUMER_TOKEN"]
-CONSUMER_SECRET = os.environ["CONSUMER_SECRET"]
-ACCESS_TOKEN = os.environ["ACCESS_TOKEN"]
-ACCESS_TOKEN_SECRET = os.environ["ACCESS_TOKEN_SECRET"]
-
 # sentiment analyzer stuff:
 ANALYZER = SentimentIntensityAnalyzer()
 
@@ -48,7 +42,7 @@ KEYWORDS = {
 COMPANIES = list(set(KEYWORDS.keys()))
 
 # Handler for successfully matched tweets
-def got_tweet(tweet_id, text, created_at):
+def got_tweet(tweet_id, text, created_at, in_test=False):
     sentimentValue = float(ANALYZER.polarity_scores(text)["compound"])
     if sentimentValue == 0:
         return "No sentiment value"
@@ -64,6 +58,9 @@ def got_tweet(tweet_id, text, created_at):
     if company == "":
         return "No company"
     print(f"{text} | sentiment: {sentimentValue}", flush=True)
+    # if we are in a test environment, return immediately
+    if in_test:
+        return company
     payload = {
         "company": company,
         "tweet_id": tweet_id,
@@ -117,6 +114,11 @@ if __name__ == "__main__":
     print("Gratiously waiting until other microservices become operational...")
     time.sleep(5)
     print("Setting up listener...")
+    # Tweepy auth tokens
+    CONSUMER_TOKEN = os.environ["CONSUMER_TOKEN"]
+    CONSUMER_SECRET = os.environ["CONSUMER_SECRET"]
+    ACCESS_TOKEN = os.environ["ACCESS_TOKEN"]
+    ACCESS_TOKEN_SECRET = os.environ["ACCESS_TOKEN_SECRET"]
     AUTH = tweepy.OAuthHandler(CONSUMER_TOKEN, CONSUMER_SECRET)
     AUTH.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
     API = tweepy.API(AUTH)

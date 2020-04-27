@@ -1,39 +1,50 @@
-name: Go
+name: Push
 on: push
 jobs:
 
-  test:
-    name: Testing
+  go-test:
+    name: Go Testing
     runs-on: ubuntu-latest
     steps:
-
     - name: Set up Go 1.13
       uses: actions/setup-go@v1
       with:
         go-version: 1.13
       id: go
-
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
-
     - name: Get dependencies
-      run: ./deps.sh
+      run: ./scripts/deps.sh
     - name: Test
-      run: cp .env.example .env && ./test.sh
+      run: cp .env.example .env && ./scripts/test.sh
 
-  build:
-    name: Building
+  docker-build:
+    name: Docker Building
     runs-on: ubuntu-latest
     steps:
-
     - name: Set up Go 1.13
       uses: actions/setup-go@v1
       with:
         go-version: 1.13
       id: go
-
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
-
     - name: Docker Compose Build
       run: cp .env.example .env && docker-compose build
+
+  pytest:
+    name: Python Testing
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Install dependencies
+      run: |
+        pip install -r ./twippy/requirements.txt
+        pip install pytest
+    - name: Pytesting
+      run: pytest
+      

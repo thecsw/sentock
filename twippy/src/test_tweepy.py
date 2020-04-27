@@ -1,36 +1,9 @@
 import pytest
 import tweepy
 import random
+import os
 from twippy import got_tweet
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-
-
-def open_tweepy(consumer_token, consumer_secret, access_token, access_token_secret):
-    try:
-        auth = tweepy.OAuthHandler(consumer_token, consumer_secret)
-        auth.set_access_token(access_token, access_token_secret)
-        api = tweepy.API(auth)
-
-        print(api.me())
-        return 1
-    except tweepy.TweepError as e:
-        print(e)
-        return 0
-
-
-def test_tweepy():
-    # Invalid tweet
-    assert open_tweepy("INVALID", "INVALID", "INVALID", "INVALID") == 0
-    # Valid tweet
-    consumer_token = "XWYNu0pXy3FujGTFs5Zz2sI3w"
-    consumer_secret = "u4lOvuenKT5rM5fvadgbe9MmRwUTK6NIcf6ZaB1HCRBKYX3lkB"
-    access_token = "1245747355397349386-jnDu79yI1J9UEKcFTaG1xV5HcvdZPo"
-    access_token_secret = "nK1S3NvBI0Ki5bvKDpeZci2y5A3rk0hsimOcgrS5YyGki"
-    assert (
-        open_tweepy(consumer_token, consumer_secret, access_token, access_token_secret)
-        == 1
-    )
-
 
 def test_fake_tweets():
     companies = [
@@ -61,7 +34,7 @@ def test_fake_tweets():
     tested_tweets = []
     for i in range(0, 9):
         tested = got_tweet(
-            r.randrange(1, 4294967295), test_tweets[i], r.randrange(1, 4294967295)
+            r.randrange(1, 4294967295), test_tweets[i], r.randrange(1, 4294967295), True
         )
         assert tested == companies[i] or tested == "No sentiment value"
 
