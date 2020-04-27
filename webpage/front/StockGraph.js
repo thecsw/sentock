@@ -42,8 +42,75 @@ export class StockGraph {
      */
 
     sentimentApiCall(name) {
-        const api = '/api/sentiments'
-        const url = `${api}?company=${name}&before=1587762000&after=1587738600`
+        let d = new Date
+        d.setUTCSeconds(0)
+        let before, after
+
+        const day = d.getDay(),
+              hour = d.getUTCHours() - 4, //get EDT
+              minute = d.getUTCMinutes(),
+
+              before930 = hour < 9 || (hour === 9 && minute < 30)
+
+        if(day === 0 || (day === 1 && before930)) {
+            //last friday
+            d.setUTCDate(new Date().getUTCDate() + (6 - new Date().getUTCDay() - 1) - 7)
+
+            d.setUTCHours(9+4)
+            d.setUTCMinutes(30)
+            before = Math.round(d.getTime()/1000)
+
+            d.setUTCHours(12+4+4)
+            d.setUTCMinutes(0)
+            after = Math.round(d.getTime()/1000)
+
+        } else if(day === 6) {
+            // yesterday
+            d.setUTCDay(5)
+
+            d.setUTCHours(9+4)
+            d.setUTCMinutes(30)
+            before = Math.round(d.getTime()/1000)
+
+            d.setUTCHours(12+4+4)
+            d.setUTCMinutes(0)
+            after = Math.round(d.getTime()/1000)
+        } else {
+            //weekday
+            if(before930) {
+                //before open
+                d.setUTCDay(d.getUTCDay() - 1) // get data from yesterday
+
+                d.setUTCHours(9+4)
+                d.setUTCMinutes(30)
+                before = Math.round(d.getTime()/1000)
+
+                d.setUTCHours(12+4+4)
+                d.setUTCMinutes(0)
+                after = Math.round(d.getTime()/1000)
+
+            } else if(hour > 4) {
+                //after close
+                d.setUTCHours(9+4)
+                d.setUTCMinutes(30)
+                before = Math.round(d.getTime()/1000)
+
+                d.setUTCHours(12+4+4)
+                d.setUTCMinutes(0)
+                after = Math.round(d.getTime()/1000)
+
+            } else {
+                //during day
+                after = Math.round(d.getTime()/1000)
+
+                d.setUTCHours(9+4)
+                d.setUTCMinutes(30)
+                before = Math.round(d.getTime()/1000)
+            }
+        }
+
+        const api = 'https://sentocks.sandyuraz.com/api/sentiments'
+        const url = `${api}?company=${name}&before=${after}&after=${before}`
 
         return fetch(url).then(res => res.json())
     }
@@ -68,8 +135,8 @@ export class StockGraph {
      */
     draw(stock, sentiment, symbol) {
 
-        console.log(symbol, 'stock', stock.slice(-this.numDays))
-        console.log(symbol, 'sentiment', sentiment.slice(-this.numDays))
+        // console.log(symbol, 'stock', stock.slice(-this.numDays))
+        // console.log(symbol, 'sentiment', sentiment.slice(-this.numDays))
 
         let chart = this.getChart(
             stock.slice(-this.numDays),
@@ -128,7 +195,8 @@ export class StockGraph {
      */
     getLabels(n) {
         let date = new Date
-        date = new Date(date.getTime() + n * 60000)
+        date.setHours(9)
+        date.setMinutes(30)
 
         return [...Array(n).keys()].map(n => {
             date = new Date(date.getTime() + 60000)
