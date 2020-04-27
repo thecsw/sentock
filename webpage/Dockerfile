@@ -1,13 +1,12 @@
 FROM abiosoft/caddy
 
-RUN \
-	apt update -y && \
-	apt upgrade -y && \
-	apt install -y npm && \
-	apt install -g jsdoc
+RUN apk update 
+RUN apk upgrade 
+RUN apk add npm 
+RUN npm i -g jsdoc
 COPY ./Caddyfile /etc
 COPY ./front /srv
-RUN \
-	jsdoc *.js && \
-	mv out docs
-
+WORKDIR /srv
+RUN /usr/bin/jsdoc index.js
+RUN ls
+RUN jsdoc index.js 

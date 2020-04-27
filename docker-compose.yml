@@ -7,9 +7,8 @@ services:
           - 127.0.0.1:5432:5432
         restart: unless-stopped
         volumes:
-          #- ./data:/var/lib/postgres/data
-          - /data/sentocks/postgres:/var/lib/postgres/data
-          #- ./data:/var/lib/postgres/data
+          - ./data:/var/lib/postgres/data
+            #- /data/sentocks/postgres:/var/lib/postgres/data
 
     caddy:
         build: ./webpage
@@ -23,13 +22,16 @@ services:
           - postgres
           - server
         volumes:
-          - "/data/sentocks/caddy/data:/root/.caddy"
-          - "/data/sentocks/caddy/logs:/var/log"
+          - "./data/sentocks/caddy/data:/root/.caddy"
+          - "./data/sentocks/caddy/logs:/var/log"
+          - docs:/srv/docs
 
     twippy:
         build: ./twippy
         env_file: .env
         restart: "always"
+        volumes:
+          - docs:/docs
     
     server:
         build: ./server
@@ -46,3 +48,6 @@ services:
         restart: "always"
         depends_on:
           - server
+
+volumes:
+  docs:

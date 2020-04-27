@@ -6,6 +6,9 @@
 	      	   without /api/
 		   transparent
 	}
+	rewrite /docs {
+    to {path} /docs/index.html
+  }
 	log / /var/log/access.log "{combined}"
 	errors stdout
 }

@@ -7,4 +7,9 @@ RUN \
  pip3 install pycco
 WORKDIR /code/src
 COPY src .
+RUN \ 
+	pycco twippy.py && \
+	mv docs twippy_docs && \
+	mkdir /docs && \
+	mv twippy_docs /docs/.
 CMD python twippy.py
