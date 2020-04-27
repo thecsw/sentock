@@ -51,20 +51,17 @@ export class StockGraph {
 
               before930 = hour < 9 || (hour === 9 && minute < 30)
 
-        if(
-            day === 0 ||
-            (day === 1 && before930)
-        ) {
+        if(day === 0 || (day === 1 && before930)) {
             //last friday
             d.setDate(new Date().getDate() + (6 - new Date().getDay() - 1) - 7)
 
             d.setHours(9)
             d.setMinutes(30)
-            before = d.getTime()
+            before = Math.round(d.getTime()/1000)
 
             d.setHours(4)
             d.setMinutes(0)
-            after = d.getTime()
+            after = Math.round(d.getTime()/1000)
 
         } else if(day === 6) {
             // yesterday
@@ -72,11 +69,11 @@ export class StockGraph {
 
             d.setHours(9)
             d.setMinutes(30)
-            before = d.getTime()
+            before = Math.round(d.getTime()/1000)
 
             d.setHours(4)
             d.setMinutes(0)
-            after = d.getTime()
+            after = Math.round(d.getTime()/1000)
         } else {
             //weekday
             if(before930) {
@@ -85,29 +82,29 @@ export class StockGraph {
 
                 d.setHours(9)
                 d.setMinutes(30)
-                before = d.getTime()
+                before = Math.round(d.getTime()/1000)
 
                 d.setHours(4)
                 d.setMinutes(0)
-                after = d.getTime()
+                after = Math.round(d.getTime()/1000)
 
             } else if(hour > 4) {
                 //after close
                 d.setHours(9)
                 d.setMinutes(30)
-                before = d.getTime()
+                before = Math.round(d.getTime()/1000)
 
                 d.setHours(4)
                 d.setMinutes(0)
-                after = d.getTime()
+                after = Math.round(d.getTime()/1000)
 
             } else {
                 //during day
-                after = d.getTime()
+                after = Math.round(d.getTime()/1000)
 
                 d.setHours(9)
                 d.setMinutes(30)
-                before = d.getTime()
+                before = Math.round(d.getTime()/1000)
 
             }
         }
@@ -198,7 +195,8 @@ export class StockGraph {
      */
     getLabels(n) {
         let date = new Date
-        date = new Date(date.getTime() + n * 60000)
+        date.setHours(9)
+        date.setMinutes(30)
 
         return [...Array(n).keys()].map(n => {
             date = new Date(date.getTime() + 60000)
