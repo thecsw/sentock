@@ -56,7 +56,13 @@ func (e *elephant) createWindowAverage(unix []int, averages []float64, company s
 	if len(averages) != len(unix) {
 		return nil, errors.New("Length of unix timestamps and averages don't match!")
 	}
+	addedTimes := make(map[int]*struct{})
 	for ind, time := range unix {
+		// If time is not unique
+		if _, ok := addedTimes[time]; ok {
+			continue
+		}
+		addedTimes[time] = nil
 		ave := &Average{
 			Unix:      time,
 			Average:   averages[ind],
