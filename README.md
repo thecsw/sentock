@@ -1,4 +1,4 @@
-![Sentocks](./sentocks.png)
+![Sentocks](./docs/sentocks.png)
 
 **Sentocks** is a sentiments rating analysis tool! We know if 
 traders are confident in a stock, then the said stock value 
@@ -12,7 +12,7 @@ about a topic.
 
 Below is an example of how it looks for some companies:
 
-![Sentocks Example](./example.png)
+![Sentocks Example](./docs/example.png)
 
 The question is, **is there a correlation between sentiments 
 and the stock market?**
@@ -21,4 +21,4 @@ and the stock market?**
 
 This is the layout of basic services we have running
 
-![Architecture](./arch.png)
+![Architecture](./docs/arch.png)
