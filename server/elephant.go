@@ -81,6 +81,13 @@ func (e *elephant) getSentiments(company string, before, after int) ([]Sentiment
 		Error
 }
 
+func (e *elephant) getCompanies() ([]string, error) {
+	result := make([]string, 0, 16)
+	return result, db.Model(&Company{}).
+		Pluck("name", &result).
+		Error
+}
+
 func (e *elephant) getLatestAverageSentiment(company string) (int, error) {
 	result := &Average{}
 	err := db.Model(e.fcompany(company)).

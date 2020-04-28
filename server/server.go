@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -63,6 +62,51 @@ func addRawSentiment(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(*res)
+}
+
+// getMarketSentiments returns the sentiments since last market open
+// until the last close or now, the last one is whichever closer
+func getMarketSentiments(w http.ResponseWriter, r *http.Request) {
+	u := r.URL.Query()
+	company := u.Get("company")
+	if company == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(webError{Msg: "Received empty params."})
+		return
+	}
+	now := time.Now().UTC()
+	// Set the default start and end to today's 14:30 -> 21:00
+	start := time.Date(now.Year(), now.Month(), now.Day(), 14, 30, 0, 0, nil)
+	end := start.Add(6*time.Hour + 30*time.Minute)
+	// Handle weekends
+	switch {
+	// If we are on Saturday or it's before 14:30, grab the day before 14:30 -> 21:00
+	case now.Weekday().String() == "Saturday" || (now.Hour() < 14 && now.Minute() < 30):
+		start = start.AddDate(0, 0, -1)
+		end = end.AddDate(0, 0, -1)
+	// If we are on Sunday, remove 2 days
+	case now.Weekday().String() == "Sunday":
+		start = start.AddDate(0, 0, -2)
+		end = end.AddDate(0, 0, -2)
+	// If we are before the market close, set it to now
+	default:
+		end = now
+	}
+	after := start.Unix()
+	before := end.Unix()
+	// Get the averaged data:
+	averages, err := Elephant.getAverages(company, int(before), int(after))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(webError{Msg: "Error getting sentiments: " + err.Error()})
+		return
+	}
+	points := make([][]float64, len(averages))
+	for ind, data := range averages {
+		points[ind] = []float64{float64(data.Unix), data.Average}
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(points)
 }
 
 func addWindowAverages(w http.ResponseWriter, r *http.Request) {
@@ -153,13 +197,22 @@ func getLatestSentiment(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(answer)
 }
 
+func getCompanies(w http.ResponseWriter, r *http.Request) {
+	companies, err := Elephant.getCompanies()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(webError{Msg: "Error getting companies: " + err.Error()})
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(companies)
+}
+
 // getSentiments is a blablabla
 func getSentiments(w http.ResponseWriter, r *http.Request) {
 	u := r.URL.Query()
 	company := u.Get("company")
 	before := u.Get("before")
 	after := u.Get("after")
-	fmt.Println("|C:", company, "|B:", before, "|A:", after)
 	if before == "" || after == "" || company == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(webError{Msg: "Received empty params."})
@@ -226,10 +279,12 @@ func main() {
 
 	log.Infof("Adding HTTP routes... ")
 	myRouter.HandleFunc("/", hello).Methods(http.MethodGet)
+	myRouter.HandleFunc("/companies", getCompanies).Methods(http.MethodGet)
 	myRouter.HandleFunc("/sentiments", getSentiments).Methods(http.MethodGet)
 	myRouter.HandleFunc("/sentiments", addRawSentiment).Methods(http.MethodPost)
 	myRouter.HandleFunc("/sentiments/raw", getRawSentiments).Methods(http.MethodGet)
 	myRouter.HandleFunc("/sentiments/latest", getLatestSentiment).Methods(http.MethodGet)
+	myRouter.HandleFunc("/sentiments/market", getMarketSentiments).Methods(http.MethodGet)
 	myRouter.HandleFunc("/sentiments/averages", addWindowAverages).Methods(http.MethodPost)
 	log.Infoln("[DONE]")
 
