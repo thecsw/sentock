@@ -8,21 +8,21 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 )
 
-var (
+const (
 	serverIP            = "http://server:10000"
+	companiesVals       = serverIP + "/companies"
+	globMarketVals      = serverIP + "/sentiments/market"
 	globpostAves        = serverIP + "/sentiments/averages"
 	globlatestsentiment = serverIP + "/sentiments/latest"
 	globrawsentiments   = serverIP + "/sentiments/raw"
-
-	wg sync.WaitGroup
 )
 
 // windowSmoothing is a function that takes a list of datapoints (unix timestamp, sentiment value),
@@ -127,6 +127,7 @@ func postAverages(company, postAves string, averages [][]float64) error {
 	}
 	jsonAves, err := json.Marshal(data)
 	req, err := http.NewRequest(http.MethodPost, postAves, bytes.NewBuffer(jsonAves))
+	req.Header.Add("webkey", os.Getenv("WEB_KEY"))
 	if err != nil {
 		return errors.New("Couldn't jsonify the averages list when trying to post averages")
 	}
@@ -144,7 +145,6 @@ func postAverages(company, postAves string, averages [][]float64) error {
 }
 
 func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
-	defer wg.Done()
 	buffer := make([][]float64, 0)
 	tries := 0
 	for {
@@ -187,7 +187,7 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 		if len(averages) == 0 {
 			time.Sleep(2 * time.Minute)
 			continue
-    		}
+		}
 
 		//post resulting calculations to server:
 		err = postAverages(company, postAves, averages)
@@ -197,7 +197,7 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 			time.Sleep(time.Duration(tries) * time.Second)
 			continue
 		}
-    
+
 		//clean up end of buffer if need be:
 		for ind := 0; ind < len(buffer); ind++ {
 			if averages[0][0]-buffer[ind][0] > 3600 {
@@ -228,23 +228,30 @@ func main() {
 		time.Sleep(100 * time.Millisecond)
 	}
 	log.Printf(bar+" Done!", strings.Repeat("=", col))
-	//do window averaging calculations:
-	companies := []string{
-		"McDonalds",
-		"Fedex",
-		"Chipotle",
-		"Microsoft",
-		"Disney",
-		"Tesla",
-		"Google",
-		"Facebook",
-		"Amazon",
+
+	// Get all companies in the system
+	resp, err := http.Get(companiesVals)
+	if err != nil {
+		panic("Failed to receive initial companies: " + err.Error())
 	}
-	for ind := 0; ind < len(companies); ind++ {
-		wg.Add(1)
-		log.Infof("Starting goroutine for %s", companies[ind])
-		go handleRealtime(companies[ind], globpostAves, globlatestsentiment, globrawsentiments)
+	companies := make([]string, 0, 16)
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&companies)
+	if err != nil {
+		panic("Failed to decode initial companies: " + err.Error())
 	}
-	wg.Wait()
-	os.Exit(1)
+	log.Println("Received the following companies:", companies)
+	for _, company := range companies {
+		log.Infof("Starting goroutine for %s", company)
+		go handleRealtime(company, globpostAves, globlatestsentiment, globrawsentiments)
+	}
+	// The stop signal channel
+	c := make(chan os.Signal, 1)
+	// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
+	// SIGKILL, SIGQUIT or SIGTERM (Ctrl+/) will not be caught.
+	signal.Notify(c, os.Interrupt)
+	// Block until we receive our signal.
+	<-c
+	log.Println("shutting down")
+	os.Exit(0)
 }
