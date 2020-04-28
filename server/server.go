@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -69,6 +70,7 @@ func addRawSentiment(w http.ResponseWriter, r *http.Request) {
 func getMarketSentiments(w http.ResponseWriter, r *http.Request) {
 	u := r.URL.Query()
 	company := u.Get("company")
+	apiType := u.Get("api_type")
 	if company == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(webError{Msg: "Received empty params."})
@@ -100,6 +102,12 @@ func getMarketSentiments(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(webError{Msg: "Error getting sentiments: " + err.Error()})
+		return
+	}
+	// PARSE CSV IF REQUESTED AND RETURN
+	if apiType == "csv" {
+		w.WriteHeader(http.StatusOK)
+		csv.NewWriter(w).WriteAll(averagesToString(averages))
 		return
 	}
 	points := make([][]float64, len(averages))
@@ -170,7 +178,6 @@ func getRawSentiments(w http.ResponseWriter, r *http.Request) {
 	points := make([][]float64, len(sentiments))
 	for ind, sent := range sentiments {
 		temp, _ := strconv.ParseFloat(sent.TweetID, 64)
-		//points[ind] = []float64{sent.Unix, sent.Sentiment, float64(strconv.ParseInt(sent.TweetID,10,0))}
 		points[ind] = []float64{float64(sent.Unix), sent.Sentiment, temp}
 	}
 	// return the list of datapoints:
@@ -214,6 +221,7 @@ func getSentiments(w http.ResponseWriter, r *http.Request) {
 	company := u.Get("company")
 	before := u.Get("before")
 	after := u.Get("after")
+	apiType := u.Get("api_type")
 	if before == "" || after == "" || company == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(webError{Msg: "Received empty params."})
@@ -239,12 +247,29 @@ func getSentiments(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(webError{Msg: "Error getting sentiments: " + err.Error()})
 		return
 	}
+	// PARSE CSV IF REQUESTED AND RETURN
+	if apiType == "csv" {
+		w.WriteHeader(http.StatusOK)
+		csv.NewWriter(w).WriteAll(averagesToString(averages))
+		return
+	}
 	points := make([][]float64, len(averages))
 	for ind, data := range averages {
 		points[ind] = []float64{float64(data.Unix), data.Average}
 	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(points)
+}
+
+func averagesToString(averages []Average) [][]string {
+	csvData := make([][]string, len(averages))
+	for ind, data := range averages {
+		csvData[ind] = []string{
+			strconv.FormatInt(int64(data.Unix), 10),
+			strconv.FormatFloat(data.Average, 'f', -1, 64),
+		}
+	}
+	return csvData
 }
 
 func main() {
