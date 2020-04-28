@@ -76,7 +76,7 @@ func getMarketSentiments(w http.ResponseWriter, r *http.Request) {
 	}
 	now := time.Now().UTC()
 	// Set the default start and end to today's 14:30 -> 21:00
-	start := time.Date(now.Year(), now.Month(), now.Day(), 14, 30, 0, 0, nil)
+	start := time.Date(now.Year(), now.Month(), now.Day(), 14, 30, 0, 0, now.Location())
 	end := start.Add(6*time.Hour + 30*time.Minute)
 	// Handle weekends
 	switch {
