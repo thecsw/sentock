@@ -126,15 +126,16 @@ export class StockGraph {
      * @param {number} n number of days
      */
     getLabels(n) {
-        let date = new Date
-        date.setHours(9)
-        date.setMinutes(30)
+        return new Array(n).fill(' ')
+        // let date = new Date
+        // date.setHours(9)
+        // date.setMinutes(30)
 
-        return [...Array(n).keys()].map(n => {
-            date = new Date(date.getTime() + 60000)
-            let min = date.getMinutes()
-            return `${date.getHours()}:${min<10?'0':''}${min}`
-        })
+        // return [...Array(n).keys()].map(n => {
+        //     date = new Date(date.getTime() + 60000)
+        //     let min = date.getMinutes()
+        //     return `${date.getHours()}:${min<10?'0':''}${min}`
+        // })
     }
 
     /**
