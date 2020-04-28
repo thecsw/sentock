@@ -89,13 +89,14 @@ func getMarketSentiments(w http.ResponseWriter, r *http.Request) {
 		start = start.AddDate(0, 0, -2)
 		end = end.AddDate(0, 0, -2)
 	// If we are before the market close, set it to now
-	default:
+	case now.Hour() < 21:
 		end = now
+	// Default is do nothing and leave previous values
+	default:
+		break
 	}
-	after := start.Unix()
-	before := end.Unix()
 	// Get the averaged data:
-	averages, err := Elephant.getAverages(company, int(before), int(after))
+	averages, err := Elephant.getAverages(company, int(end.Unix()), int(start.Unix()))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(webError{Msg: "Error getting sentiments: " + err.Error()})
