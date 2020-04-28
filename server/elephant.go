@@ -109,7 +109,7 @@ func (e *elephant) getAverages(company string, before, after int) ([]Average, er
 	return result, db.Model(e.fcompany(company)).
 		Where("unix > ?", after).
 		Where("unix < ?", before).
-		Order("unix desc").
+		Order("unix asc").
 		Related(&result).
 		Error
 }
