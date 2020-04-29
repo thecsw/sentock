@@ -1,9 +1,17 @@
 import {StockGraph} from './StockGraph.js'
 
 // Initialize modals
-document.addEventListener('DOMContentLoaded',
-    () => M.Modal.init(document.querySelectorAll('.modal'), {})
+document.addEventListener('DOMContentLoaded', () =>
+    M.Modal.init(document.querySelectorAll('.modal'), {})
 )
+
+//display date on navbar
+new Vue({
+    el: '#nav',
+    data: {
+        date: new Date
+    }
+})
 
 // Set up stock graphs
 new Vue({
