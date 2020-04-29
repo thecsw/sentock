@@ -6,10 +6,6 @@
 	      	   without /api/
 		   transparent
 	}
-	proxy /docs/josh/ server:6060 {
-	      	   without /api/
-		   transparent
-	}
 	log / /var/log/access.log "{combined}"
 	errors stdout
 }

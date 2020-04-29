@@ -7,6 +7,6 @@ RUN npm i -g jsdoc
 COPY ./front /srv
 COPY ./Caddyfile /etc
 WORKDIR /srv
-RUN jsdoc index.js 
+RUN sudo jsdoc index.js 
 RUN ls
 #RUN mv /srv/out /srv/docs/front_docs
