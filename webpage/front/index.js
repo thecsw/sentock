@@ -5,6 +5,14 @@ document.addEventListener('DOMContentLoaded', () =>
     M.Modal.init(document.querySelectorAll('.modal'), {})
 )
 
+//display date on navbar
+new Vue({
+    el: '#nav',
+    data: {
+        date: new Date
+    }
+})
+
 // Set up stock graphs
 new Vue({
     el: '#graphs',
@@ -21,7 +29,6 @@ new Vue({
             new StockGraph('Microsoft', 'MSFT', '9O7U8ZRHOF4WU0FN'),
             new StockGraph('Disney', 'DIS', 'N0U4CZ8XN5YCEK9U'),
             new StockGraph('Fedex', 'FDX', 'YTU231UOF5L0T7WB')
-        ],
-        date: new Date
+        ]
     }
 })

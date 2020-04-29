@@ -14,47 +14,45 @@
         <link rel="stylesheet" href="style.css"/>
     </head>
     <body class="grey darken-3">
-        <div id="graphs">
-            <!-- Navbar -->
-            <nav class="grey darken-4" role="navigation">
-                <div class="nav-wrapper container row">
-                    <a id="logo-container" class="brand-logo col lg-3">Sentocks</a>
-                    <div class="center col lg-5">
-                        {{date}}
-                    </div>
-                    <ul id="nav-mobile" class="right hide-on-med-and-down">
-                        <li><a href="https://github.com/thecsw/sentock">Github</a></li>
-                    </ul>
+        <!-- Navbar -->
+        <nav class="grey darken-4" role="navigation" id="nav">
+            <div class="nav-wrapper container row">
+                <a id="logo-container" class="brand-logo col lg-3">Sentocks</a>
+                <div class="center col lg-5">
+                    {{date}}
                 </div>
-            </nav>
+                <ul id="nav-mobile" class="right hide-on-med-and-down">
+                    <li><a href="https://github.com/thecsw/sentock">Github</a></li>
+                </ul>
+            </div>
+        </nav>
 
-            <!-- Graphs -->
-            <main class="container">
-                <div v-html="getError()"></div>
-                <div class="row">
-                    <div v-for="graph in graphs" :key="graph.symbol">
-                        <div class="col s12 m6 xl4">
-                            <div class="hoverable card grey darken-4">
-                                <a class="modal-trigger white-text" v-bind:href="`#${graph.id}-modal`">
-                                    <div class="card-image">
-                                        <canvas v-bind:id="`${graph.id}-preview`"></canvas>
-                                    </div>
-                                    <div class="card-content">
-                                        <span class="card-title">{{graph.name}}</span>
-                                    </div>
-                                </a>
-                            </div>
-                            <div v-bind:id="`${graph.id}-modal`" class="modal grey darken-4">
-                                <div class="modal-content white-text">
-                                    <h4>{{graph.name}}</h4>
-                                    <canvas v-bind:id="`${graph.id}-full`"></canvas>
+        <!-- Graphs -->
+        <main id="graphs" class="container">
+            <div v-html="getError()"></div>
+            <div class="row">
+                <div v-for="graph in graphs" :key="graph.symbol">
+                    <div class="col s12 m6 xl4">
+                        <div class="hoverable card grey darken-4">
+                            <a class="modal-trigger white-text" v-bind:href="`#${graph.id}-modal`">
+                                <div class="card-image">
+                                    <canvas v-bind:id="`${graph.id}-preview`"></canvas>
                                 </div>
+                                <div class="card-content">
+                                    <span class="card-title">{{graph.name}}</span>
+                                </div>
+                            </a>
+                        </div>
+                        <div v-bind:id="`${graph.id}-modal`" class="modal grey darken-4">
+                            <div class="modal-content white-text">
+                                <h4>{{graph.name}}</h4>
+                                <canvas v-bind:id="`${graph.id}-full`"></canvas>
                             </div>
                         </div>
                     </div>
                 </div>
-            </main>
-        </div>
+            </div>
+        </main>
 
         <!-- Footer -->
         <footer class="grey darken-4">
