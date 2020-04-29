@@ -1,36 +1,28 @@
 package main
 
-import "github.com/jinzhu/gorm"
-
 var (
-	db     *gorm.DB
-	dbType = "postgres"
-	//connectionString = "postgresql://sandy:pass@db:5432/sentock?sslmode=disable"
-	connectionString = "postgresql://sandy:pass@postgres:5432/sentock?sslmode=disable"
-
 	cachedNames map[string]uint = make(map[string]uint)
 )
 
-type Company struct {
-	gorm.Model `json:"-"`
-
-	Name       string      `gorm:"unique" json:"name"`
-	Sentiments []Sentiment `json:"-"`
+// webError is an interface for HTTP error return
+// codes
+type webError struct {
+	Msg string `json:"msg"`
 }
 
-type Sentiment struct {
-	gorm.Model `json:"-"`
-
-	TweetID   string  `gorm:"unique;" json:"tweet_id"`
-	Unix      int     `json:"unix"`
+// sentimentPayload is what server expects to receive
+// in a request body when adding a new sentiment value
+type sentimentPayload struct {
+	Company   string  `json:"company"`
+	TweetID   string  `json:"tweet_id"`
 	Sentiment float64 `json:"sentiment"`
-	CompanyID uint    `json:"-"`
+	Unix      int     `json:"unix"`
 }
 
-type Average struct {
-	gorm.Model `json:"-"`
-
-	Unix      int     `json:"unix"`
-	Average   float64 `json:"average"`
-	CompanyID uint    `json:"-"`
+// windowAvePayload is the body request we want
+// whan adding now average values (usually josh)
+type windowAvePayload struct {
+	Company  string    `json:"company"`
+	Unix     []int     `json:"unix"`
+	Averages []float64 `json:"average"`
 }
