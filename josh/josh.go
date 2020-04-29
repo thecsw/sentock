@@ -230,7 +230,7 @@ func main() {
 	bar := fmt.Sprintf("\x0c[%%-%vs]", col)
 	for i := 0; i < col; i++ {
 		log.Printf(bar, strings.Repeat("=", i)+">")
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1 * time.Second)
 	}
 	log.Printf(bar+" Done!", strings.Repeat("=", col))
 
