@@ -6,10 +6,13 @@ document.addEventListener('DOMContentLoaded', () =>
 )
 
 //display date on navbar
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+const date = new Date
 new Vue({
     el: '#nav',
     data: {
-        date: new Date
+        date: days[date.getDay()] + ' ' + months[date.getMonth()] + ' ' + date.getDate() + ' ' + date.getFullYear()
     }
 })
 
