@@ -18,11 +18,14 @@
         <nav class="grey darken-4" role="navigation">
             <div class="nav-wrapper container">
                 <a id="logo-container" class="brand-logo">Sentocks</a>
+                <ul id="nav-mobile" class="right hide-on-med-and-down">
+                    <li><a href="https://github.com/thecsw/sentock">Github</a></li>
+                </ul>
             </div>
         </nav>
 
         <!-- Graphs -->
-        <div id="graphs" class="container">
+        <main id="graphs" class="container">
             <div v-html="getError()"></div>
             <div class="row">
                 <div v-for="graph in graphs" :key="graph.symbol">
@@ -46,7 +49,22 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="grey darken-4">
+            <div class="container">
+                <div class="row center valign-wrapper">
+                    <div class="col s12">
+                        <span class="white-text name"><i class="material-icons">storage</i>Drake</span>
+                        <span class="white-text name"><i class="material-icons">collections</i>Dylan</span>
+                        <span class="white-text name"><i class="material-icons">show_chart</i>Jonathan</span>
+                        <span class="white-text name"><i class="material-icons">build</i>Ross</span>
+                        <span class="white-text name"><i class="material-icons">cloud</i>Sandy</span>
+                    </div>
+                </div>
+            </div>
+        </footer>
 
         <!-- Javascript -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js" integrity="sha256-ngFW3UnAN0Tnm76mDuu7uUtYEcG3G5H1+zioJw3t+68=" crossorigin="anonymous"></script>
