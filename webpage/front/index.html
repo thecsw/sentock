@@ -13,11 +13,14 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" integrity="sha384-5KZdSYqynSzIjQGS2M1O3HW6HVDBjfNx0v5Y2eQuE3vvQ9NTiiPK9/GWc0yYCrgw" crossorigin="anonymous">
         <link rel="stylesheet" href="style.css"/>
     </head>
-    <body class="grey darken-3">
+    <body class="grey darken-3" id="graphs">
         <!-- Navbar -->
         <nav class="grey darken-4" role="navigation">
-            <div class="nav-wrapper container">
-                <a id="logo-container" class="brand-logo">Sentocks</a>
+            <div class="nav-wrapper container row">
+                <a id="logo-container" class="brand-logo col lg-3">Sentocks</a>
+                <div class="center col lg-5">
+                    {{date}}
+                </div>
                 <ul id="nav-mobile" class="right hide-on-med-and-down">
                     <li><a href="https://github.com/thecsw/sentock">Github</a></li>
                 </ul>
@@ -25,7 +28,7 @@
         </nav>
 
         <!-- Graphs -->
-        <main id="graphs" class="container">
+        <main class="container">
             <div v-html="getError()"></div>
             <div class="row">
                 <div v-for="graph in graphs" :key="graph.symbol">
