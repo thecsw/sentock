@@ -23,6 +23,7 @@ services:
         volumes:
           - "/data/sentocks/caddy/data:/root/.caddy"
           - "/data/sentocks/caddy/logs:/var/log"
+          - "./webpage/front:/srv"
 
     twippy:
         build: ./twippy
