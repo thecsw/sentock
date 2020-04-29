@@ -12,12 +12,15 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
+// elephant is a struct to define DB interaction
 type elephant struct{}
 
 var (
+	// Elephant is the exposed model into DB
 	Elephant = &elephant{}
 )
 
+// connectDB connects to the database
 func (*elephant) connectDB(database string) (*gorm.DB, error) {
 	const timeout = 1 * time.Minute
 	deadline := time.Now().Add(timeout)
@@ -35,11 +38,13 @@ func (*elephant) connectDB(database string) (*gorm.DB, error) {
 	return nil, fmt.Errorf("failed connect to the database after %d attempts", tries)
 }
 
+// createCompany adds company to the database
 func (*elephant) createCompany(name string) (*Company, error) {
 	res := &Company{Name: name}
 	return res, db.Create(res).Error
 }
 
+// createSentiment adds a raw sentiment datapoint to the database
 func (e *elephant) createSentiment(tweetID string, unix int, sentiment float64, company string) (*Sentiment, error) {
 	ans := &Sentiment{
 		TweetID:   tweetID,
@@ -50,6 +55,7 @@ func (e *elephant) createSentiment(tweetID string, unix int, sentiment float64, 
 	return ans, db.Create(ans).Error
 }
 
+// createWindowAverage adds a list of averaged sentiment datapoints to the database
 func (e *elephant) createWindowAverage(unix []int, averages []float64, company string) ([]*Average, error) {
 	end := make([]*Average, len(unix))
 	var err error
@@ -71,6 +77,8 @@ func (e *elephant) createWindowAverage(unix []int, averages []float64, company s
 	return end, err
 }
 
+// getSentiments gets raw sentiments from "sentiments" table for all values
+// that are connected to company and bound by after < t < before
 func (e *elephant) getSentiments(company string, before, after int) ([]Sentiment, error) {
 	result := make([]Sentiment, 0, 128)
 	return result, db.Model(e.fcompany(company)).
@@ -81,6 +89,7 @@ func (e *elephant) getSentiments(company string, before, after int) ([]Sentiment
 		Error
 }
 
+// getCompanies returns a string list of all companies in "companies" table
 func (e *elephant) getCompanies() ([]string, error) {
 	result := make([]string, 0, 16)
 	return result, db.Model(&Company{}).
@@ -88,6 +97,9 @@ func (e *elephant) getCompanies() ([]string, error) {
 		Error
 }
 
+// getLatestAverageSentiment gets latest unix timestamp for
+// company. Used by josh for anchoring and starting processing
+// only from that point onward
 func (e *elephant) getLatestAverageSentiment(company string) (int, error) {
 	result := &Average{}
 	err := db.Model(e.fcompany(company)).
@@ -104,20 +116,32 @@ func (e *elephant) getLatestAverageSentiment(company string) (int, error) {
 	return result.Unix, err
 }
 
+// getAverages is the same as getSentiments but only returns already
+// processed values
 func (e *elephant) getAverages(company string, before, after int) ([]Average, error) {
 	result := make([]Average, 0, 128)
 	return result, db.Model(e.fcompany(company)).
 		Where("unix > ?", after).
 		Where("unix < ?", before).
-		Order("unix desc").
+		Order("unix asc").
 		Related(&result).
 		Error
 }
 
+// deleteOldRaws deletes all raw sentiments that are older than before
+func (e *elephant) deleteOldRaws(before int64) error {
+	return db.Unscoped().Model(&Sentiment{}).
+		Where("unix < ?", before).
+		Delete(&Sentiment{}).
+		Error
+}
+
+// close closes the connection to the database
 func (*elephant) close() error {
 	return db.Close()
 }
 
+// autoMigrate automatically sets up all the tables that are used
 func (*elephant) autoMigrate() error {
 	return db.AutoMigrate(&Company{}, &Sentiment{}, &Average{}).Error
 }
@@ -131,6 +155,8 @@ func (e *elephant) fcompany(company string) *Company {
 	return res
 }
 
+// ctod takes a company and returns the company's id
+// (and possibly makes the company a new entry if it wasn't there already)
 func (e *elephant) ctod(company string, autocreate bool) uint {
 	companyID := uint(0)
 	var ok bool
