@@ -185,8 +185,8 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 		//prepend results to buffer: (so that buffer always remains in descending order)
 		buffer = append(rawsents, buffer...)
 
-		//calculate and fill in averages needed: (uses result (the last unix timestamp calculated) as the front
-		averages := windowSmoothing(buffer, result, 3600)
+		//calculate and fill in averages needed: (uses result+60 (the next unix timestamp to calculate) as the front)
+		averages := windowSmoothing(buffer, result+60, 3600)
 		//if we got no tweets back, proceed like normal
 		if len(averages) == 0 {
 			time.Sleep(2 * time.Minute)
