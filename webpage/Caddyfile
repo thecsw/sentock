@@ -1,11 +1,6 @@
-{$CADDY_API_WEB_ADDRESS} {
-	cors
-	root /srv
-	gzip
-	proxy /api/ server:10000 {
-	      	   without /api/
-		   transparent
-	}
-	log / /var/log/access.log "{combined}"
-	errors stdout
+localhost {
+    root /srv
+    proxy /api/ localhost:10000 {
+        transparent
+    }
 }
