@@ -76,7 +76,7 @@ You can deploy a full environment by running `./scripts/prod.sh`
 - [Sandy Urazayev](https://github.com/thecsw) - DB handling, Go/Python
 - [Drake Clark](https://github.com/drmk3) - Smoothing algorithm, Go/Python 
 - [Ross Copeland](https://github.com/ross-hugo) - Infrastructure, Docker and documents
-- [Dylan Prebyl](https://github.com/red2gred2) - Sentocks webpage, VueJS
+- [Dylan Prebyl](https://github.com/red2fred2) - Sentocks webpage, VueJS
 - [Jonathan Downs](https://github.com/JMDowns) - Twippy, documentation, testing, Python
 
 ## License
