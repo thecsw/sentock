@@ -1,4 +1,4 @@
-![Sentocks](./docs/sentocks.png)
+![Sentocks](./pics/sentocks.png)
 
 **Sentocks** is a sentiments rating analysis tool! We know if 
 traders are confident in a stock, then the said stock value 
@@ -13,7 +13,7 @@ about a topic.
 Below is an example of how it looks for some companies on
 `2020-04-25` from `15:30 -> 00:30 UTC` 
 
-![Sentocks Example](./docs/example.png)
+![Sentocks Example](./pics/example.png)
 
 The question is, **is there a correlation between sentiments 
 and the stock market?**
@@ -23,7 +23,7 @@ and the stock market?**
 Picture below is an example of comparing sentiment ratings and stock
 market values on `2020-04-28` (**Click to zoom in**)
 
-![Market result](./docs/result.png)
+![Market result](./pics/result.png)
 
 ## Testing your or our data
 
@@ -35,7 +35,7 @@ the incoming format.
 
 This is the layout of basic services we have running
 
-![Architecture](./docs/arch.png)
+![Architecture](./pics/arch.png)
 
 - `server`: handles all interactions with the database, non-GET have to be authorized
 - `twippy`: actual twitter feed listener and raw sentiment submitter. Sends raw data to `server`
