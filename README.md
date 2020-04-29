@@ -10,7 +10,8 @@ searching on pre-determined keywords and applies some quick
 sentiment analysis to get a rough estimate on one's sentiment
 about a topic. 
 
-Below is an example of how it looks for some companies:
+Below is an example of how it looks for some companies on
+`2020-04-25` from `15:30 -> 00:30 UTC` 
 
 ![Sentocks Example](./docs/example.png)
 
@@ -20,9 +21,15 @@ and the stock market?**
 ## Initial results
 
 Picture below is an example of comparing sentiment ratings and stock
-market values on 2020-04-28 (**Click to zoom in**)
+market values on `2020-04-28` (**Click to zoom in**)
 
 ![Market result](./docs/result.png)
+
+## Testing your or our data
+
+We have a [collaboratory google jupyter notebook](https://colab.research.google.com/drive/1GsM5fP4Q6vdLs_Ct2WDGNDeKHH_hEq9R) where you can add any endpoints and test the data
+for its correctness, etc. Python code there does all the plotting and figuring out
+the incoming format.
 
 ## Microservice architecture
 
