@@ -27,7 +27,7 @@ const (
 
 // windowSmoothing is a function that takes a list of datapoints (unix timestamp, sentiment value),
 // a starting value to calculate, and a window size and
-// returns a list of datapoints (unix timestamp, ave sentiment for past hour)
+// returns a list of datapoints with values: (unix timestamp, ave sentiment for past hour)
 func windowSmoothing(raws [][]float64, front, window int64) [][]float64 {
 	if len(raws) == 0 {
 		log.Error("no data to window smooth")
@@ -87,6 +87,7 @@ func getLatest(company, latestsentiment string) (int64, error) {
 	return result, nil
 }
 
+// getrawSentiments queries the server for the most recent raw sentiments
 func getrawSentiments(company, rawSentsIp string, waketime time.Time, latest, windowSize int64) ([][]float64, error) {
 	//get list of new sentiments:
 	values := url.Values{}
@@ -114,6 +115,7 @@ func getrawSentiments(company, rawSentsIp string, waketime time.Time, latest, wi
 	return rawsents, nil
 }
 
+// postAverages posts the processed sentiments to the server so they can be added to the db.
 func postAverages(company, postAves string, averages [][]float64) error {
 	type windowAvePayload struct {
 		Company  string    `json:"company"`
@@ -144,6 +146,8 @@ func postAverages(company, postAves string, averages [][]float64) error {
 	return nil
 }
 
+// handleRealtime handles the reatlime analysis of the raw sentiment data.  It is thread safe for different companies.
+// It takes in the company and the list of different endpoints to retreive or post data to.
 func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 	buffer := make([][]float64, 0)
 	tries := 0
@@ -217,6 +221,7 @@ func handleRealtime(company, postAves, latestsentiment, rawsentiments string) {
 	}
 }
 
+// main queries the server for a list of companies and then starts up the realtime analysis of each company's raw sentiments.
 func main() {
 	log.Infoln("Gratiously waiting until other microservices become operational...")
 	// From https://play.golang.org/
