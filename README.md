@@ -20,7 +20,7 @@ and the stock market?**
 ## Initial results
 
 Picture below is an example of comparing sentiment ratings and stock
-market values on 2020-04-28
+market values on 2020-04-28 (**Click to zoom in**)
 
 ![Market result](./docs/result.png)
 
