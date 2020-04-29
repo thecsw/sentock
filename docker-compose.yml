@@ -21,20 +21,23 @@ services:
         depends_on:
           - postgres
           - server
+          - server_docs
+          - josh_docs
         volumes:
           - "./data/sentocks/caddy/data:/root/.caddy"
           - "./data/sentocks/caddy/logs:/var/log"
-          - docs:/srv/docs
+          - twippy_docs:/srv/docs/twippy
 
     twippy:
         build: ./twippy
         env_file: .env
         restart: "always"
         volumes:
-          - docs:/docs
+          - twippy_docs:/docs
     
     server:
         build: ./server
+        command: ./server
         restart: "always"
         env_file: .env
         ports:
@@ -42,12 +45,31 @@ services:
         depends_on:
           - postgres
 
+    server_docs:
+        build: ./server
+        command: godoc -http=:6061
+        restart: "always"
+        env_file: .env
+        ports: 
+          - 6061:6061
+        depends_on:
+          - server
+
     josh:
         build: ./josh
         env_file: .env
         restart: "always"
         depends_on:
           - server
+        command: ./josh
+
+    josh_docs:
+        build: ./josh
+        command: godoc -http=:6060
+        ports:
+          - 6060:6060
+        depends_on:
+          - josh
 
 volumes:
-  docs:
+  twippy_docs:

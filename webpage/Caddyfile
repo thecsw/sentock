@@ -6,9 +6,10 @@
 	      	   without /api/
 		   transparent
 	}
-	rewrite /docs {
-    to {path} /docs/index.html
-  }
+	proxy /docs/josh/ server:6060 {
+	      	   without /api/
+		   transparent
+	}
 	log / /var/log/access.log "{combined}"
 	errors stdout
 }
