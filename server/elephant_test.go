@@ -94,6 +94,27 @@ func (suite *elephantTestSuite) TestCGetSentiments() {
 	suite.Assert().Equal(1, len(sntsd))
 }
 
+func (suite *elephantTestSuite) TestDDeleteSentiments() {
+	err := suite.myelephant.deleteOldRaws(2)
+	suite.Assert().Nil(err)
+
+	sntsa, err := suite.myelephant.getSentiments("Company A", 20, 0)
+	suite.Assert().Nil(err)
+	suite.Assert().Equal(2, len(sntsa))
+
+	sntsb, err := suite.myelephant.getSentiments("Company B", 20, 0)
+	suite.Assert().Nil(err)
+	suite.Assert().Equal(2, len(sntsb))
+
+	sntsc, err := suite.myelephant.getSentiments("Company C", 20, 0)
+	suite.Assert().Nil(err)
+	suite.Assert().Equal(1, len(sntsc))
+
+	sntsd, err := suite.myelephant.getSentiments("Company D", 20, 0)
+	suite.Assert().Nil(err)
+	suite.Assert().Equal(0, len(sntsd))
+}
+
 func TestElephant(t *testing.T) {
 	suite.Run(t, new(elephantTestSuite))
 }

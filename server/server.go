@@ -247,6 +247,18 @@ func getSentiments(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(points)
 }
 
+func bobby() {
+	for {
+		log.Infoln("deleting raw sentiments... (anything from before 24 hours ago)")
+		err := Elephant.deleteOldRaws(time.Now().Add(-24 * time.Hour).Unix())
+		if err != nil {
+			log.Infoln("Problem deleting raw sentiments: " + err.Error())
+		}
+		// sleep for an hour:
+		time.Sleep(time.Hour)
+	}
+}
+
 func main() {
 	log.Infof("Gratiously waiting until other microservices become operational...")
 	time.Sleep(5 * time.Second)
@@ -268,6 +280,9 @@ func main() {
 		panic(err)
 	}
 	log.Infoln("[DONE]")
+
+	//launch goroutine to clean up old raw sentiments
+	go bobby()
 
 	// Create new router
 	log.Infof("Creating our HTTP router... ")

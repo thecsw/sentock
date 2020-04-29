@@ -114,6 +114,13 @@ func (e *elephant) getAverages(company string, before, after int) ([]Average, er
 		Error
 }
 
+func (e *elephant) deleteOldRaws(before int64) error {
+	return db.Unscoped().Model(&Sentiment{}).
+		Where("unix < ?", before).
+		Delete(&Sentiment{}).
+		Error
+}
+
 func (*elephant) close() error {
 	return db.Close()
 }
