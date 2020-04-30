@@ -83,7 +83,7 @@ You can deploy a full environment by running `./scripts/prod.sh`
 
 This project wouldn't be what it is without building upon the works of many other people:
 
-- [tweepy](http://www.tweepy.org/) - a python library for accessing the twitter API
+- [tweepy](http://www.tweepy.org/) - a Python library for accessing the twitter API
 - [Alpha Vantage](https://www.alphavantage.co/) - an API for accessing realtime and historical stock data
 - [vaderSentiment](https://github.com/cjhutto/vaderSentiment) - a sentiment analysis tool
 - [Gorm](https://gorm.io/) - an ORM library for Golang
