@@ -62,7 +62,7 @@ func getMarketSentiments(w http.ResponseWriter, r *http.Request) {
 	// Handle weekends
 	switch {
 	// If we are on Saturday or it's before 14:30, grab the day before 14:30 -> 21:00
-	case now.Weekday().String() == "Saturday" || (now.Hour() < 14 && now.Minute() < 30):
+	case now.Weekday().String() == "Saturday" || now.Before(start):
 		start = start.AddDate(0, 0, -1)
 		end = end.AddDate(0, 0, -1)
 	// If we are on Sunday, remove 2 days
