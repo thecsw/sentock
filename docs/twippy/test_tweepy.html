@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>test_tweepy.py</title>
+  <link rel="stylesheet" href="pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>test_tweepy.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pytest</span>
+<span class="kn">import</span> <span class="nn">tweepy</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">twippy</span> <span class="kn">import</span> <span class="n">got_tweet</span>
+<span class="kn">from</span> <span class="nn">vaderSentiment.vaderSentiment</span> <span class="kn">import</span> <span class="n">SentimentIntensityAnalyzer</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">test_fake_tweets</span><span class="p">():</span>
+    <span class="n">companies</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;McDonalds&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Chipotle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Microsoft&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Fedex&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Disney&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Google&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Tesla&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Facebook&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Amazon&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">test_tweets</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;McDonald&#39;s is sooo tasty!&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;I freaking hate Chipotle!&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;I do not dislike Microsoft&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Fedex is te wey bruddah *clicking intensifies*&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;I love Disney!!!!!&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Google hates me, and I hate Google&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Elon Musk is doing a great job at Tesla&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Mark Zuckerberg&#39;s Facebook is horrible&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;I love Amazon&#39;s customer service!&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">()</span>
+
+    <span class="n">tested_tweets</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">9</span><span class="p">):</span>
+        <span class="n">tested</span> <span class="o">=</span> <span class="n">got_tweet</span><span class="p">(</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4294967295</span><span class="p">),</span> <span class="n">test_tweets</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">r</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4294967295</span><span class="p">),</span> <span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">tested</span> <span class="o">==</span> <span class="n">companies</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">or</span> <span class="n">tested</span> <span class="o">==</span> <span class="s2">&quot;No sentiment value&quot;</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">test_sentiment_values</span><span class="p">():</span>
+    <span class="n">analyzer</span> <span class="o">=</span> <span class="n">SentimentIntensityAnalyzer</span><span class="p">()</span>
+    <span class="n">test_tweets</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;McDonald&#39;s is sooo tasty!&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;I freaking hate Chipotle!&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;I do not dislike Microsoft&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;I love Disney!!!!!&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Google hates me, and I hate Google&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Elon Musk is doing a great job at Tesla&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Mark Zuckerberg&#39;s Facebook is horrible&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Amazon&#39;s customer service is stellar!&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">positive_test_tweets</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;McDonald&#39;s is sooo tasty!&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;I do not dislike Microsoft&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;I love Disney!!!!!&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Elon Musk is doing a great job at Tesla&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Amazon&#39;s customer service is stellar!&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">negative_test_tweets</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;I freaking hate Chipotle!&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Google hates me, and I hate Google&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Mark Zuckerberg&#39;s Facebook is horrible&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">positive_test_tweets</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">analyzer</span><span class="o">.</span><span class="n">polarity_scores</span><span class="p">(</span><span class="n">tweet</span><span class="p">)[</span><span class="s2">&quot;compound&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="ow">or</span> <span class="nb">float</span><span class="p">(</span><span class="n">analyzer</span><span class="o">.</span><span class="n">polarity_scores</span><span class="p">(</span><span class="n">tweet</span><span class="p">)[</span><span class="s2">&quot;compound&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">negative_test_tweets</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">analyzer</span><span class="o">.</span><span class="n">polarity_scores</span><span class="p">(</span><span class="n">tweet</span><span class="p">)[</span><span class="s2">&quot;compound&quot;</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">0</span>
+            <span class="ow">or</span> <span class="nb">float</span><span class="p">(</span><span class="n">analyzer</span><span class="o">.</span><span class="n">polarity_scores</span><span class="p">(</span><span class="n">tweet</span><span class="p">)[</span><span class="s2">&quot;compound&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="p">)</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

@@ -79,6 +79,26 @@ You can deploy a full environment by running `./scripts/prod.sh`
 - [Dylan Prebyl](https://github.com/red2fred2) - Sentocks webpage, VueJS
 - [Jonathan Downs](https://github.com/JMDowns) - Twippy, documentation, testing, Python
 
+## References
+
+This project wouldn't be what it is without building upon the works of many other people:
+
+- [tweepy](http://www.tweepy.org/) - a Python library for accessing the twitter API
+- [Alpha Vantage](https://www.alphavantage.co/) - an API for accessing realtime and historical stock data
+- [vaderSentiment](https://github.com/cjhutto/vaderSentiment) - a sentiment analysis tool
+- [Gorm](https://gorm.io/) - an ORM library for Golang
+- [gorilla/mux](https://github.com/gorilla/mux) - http router and URl matcher for Golang
+- [logrus](https://github.com/Sirupsen/logrus) - a Golang logging tool
+- [Vue.js](https://vuejs.org/) - a Javascript framework
+- [Chart.js](https://www.chartjs.org/) - A Javascript chart making library
+- [Materialize](https://materializecss.com/) - A front-end design framework (Javascript/css)
+- [Go](https://golang.org/) - A programming language
+- [Python](https://www.python.org/) - Also a programming language
+- [Javascript](https://en.wikipedia.org/wiki/JavaScript) - Yet another programming language
+- [Docker](https://www.docker.com/) - A way of containerizing applications
+- [Caddy](https://caddyserver.com/) - An open source Golang webserver
+- [PostgreSQL](https://www.postgresql.org/) - A database system
+
 ## License
 
 For all your licensing questions, please refer to [our license](./LICENSE)
