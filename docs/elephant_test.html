@@ -1,0 +1,206 @@
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>elephant_test.go</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="gocco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <div id="jump_to">
+        Jump To &hellip;
+        <div id="jump_wrapper">
+          <div id="jump_page">
+              
+              <a class="source" href="admin.html">
+                  admin.go
+              </a>
+              
+              <a class="source" href="elephant.html">
+                  elephant.go
+              </a>
+              
+              <a class="source" href="elephant_test.html">
+                  elephant_test.go
+              </a>
+              
+              <a class="source" href="models.html">
+                  models.go
+              </a>
+              
+              <a class="source" href="sentiments.html">
+                  sentiments.go
+              </a>
+              
+              <a class="source" href="server.html">
+                  server.go
+              </a>
+              
+              <a class="source" href="vars.html">
+                  vars.go
+              </a>
+              
+          </div>
+        </div>
+      </div>
+    
+    <table cellpadding="0" cellspacing="0">
+      <thead>
+        <tr>
+          <th class="docs">
+            <h1>
+                elephant_test.go
+            </h1>
+          </th>
+          <th class="code">
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+          
+          <tr id="section-1">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+                
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span></span><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+	<span class="s">&quot;testing&quot;</span>
+
+	<span class="s">&quot;github.com/stretchr/testify/suite&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">type</span> <span class="nx">elephantTestSuite</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Suite</span>
+	<span class="nx">myelephant</span> <span class="nx">elephant</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">suite</span> <span class="o">*</span><span class="nx">elephantTestSuite</span><span class="p">)</span> <span class="nx">SetupSuite</span><span class="p">()</span> <span class="p">{</span>
+	<span class="kd">var</span> <span class="nx">err</span> <span class="kt">error</span>
+	<span class="nx">db</span><span class="p">,</span> <span class="nx">err</span> <span class="p">=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">connectDB</span><span class="p">(</span><span class="s">&quot;postgresql://sandy:pass@127.0.0.1:5432/sentock?sslmode=disable&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">db</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">autoMigrate</span><span class="p">())</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">suite</span> <span class="o">*</span><span class="nx">elephantTestSuite</span><span class="p">)</span> <span class="nx">TestACreateCompanies</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">a</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createCompany</span><span class="p">(</span><span class="s">&quot;Company A&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">a</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">b</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createCompany</span><span class="p">(</span><span class="s">&quot;Company B&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">b</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">c</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createCompany</span><span class="p">(</span><span class="s">&quot;Company C&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">d</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createCompany</span><span class="p">(</span><span class="s">&quot;Company D&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">d</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">e</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createCompany</span><span class="p">(</span><span class="s">&quot;Company E&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">f</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createCompany</span><span class="p">(</span><span class="s">&quot;Company F&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">f</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">suite</span> <span class="o">*</span><span class="nx">elephantTestSuite</span><span class="p">)</span> <span class="nx">TestBCreateSentiments</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">sa1</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createSentiment</span><span class="p">(</span><span class="s">&quot;twa1&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Company A&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">sa1</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">sa2</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createSentiment</span><span class="p">(</span><span class="s">&quot;twa2&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&quot;Company A&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">sa2</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">sa3</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createSentiment</span><span class="p">(</span><span class="s">&quot;twa3&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s">&quot;Company A&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">sa3</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+
+	<span class="nx">sb1</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createSentiment</span><span class="p">(</span><span class="s">&quot;twb1&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Company B&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">sb1</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">sb2</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createSentiment</span><span class="p">(</span><span class="s">&quot;twb2&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&quot;Company B&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">sb2</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">sb3</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createSentiment</span><span class="p">(</span><span class="s">&quot;twb3&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s">&quot;Company B&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">sb3</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+
+	<span class="nx">sc1</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createSentiment</span><span class="p">(</span><span class="s">&quot;twc1&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Company C&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">sc1</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">sc2</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createSentiment</span><span class="p">(</span><span class="s">&quot;twc2&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&quot;Company C&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">sc2</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+
+	<span class="nx">sd1</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">createSentiment</span><span class="p">(</span><span class="s">&quot;twd1&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Company D&quot;</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">NotNil</span><span class="p">(</span><span class="nx">sd1</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">suite</span> <span class="o">*</span><span class="nx">elephantTestSuite</span><span class="p">)</span> <span class="nx">TestCGetSentiments</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">sntsa</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">getSentiments</span><span class="p">(</span><span class="s">&quot;Company A&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Equal</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">sntsa</span><span class="p">))</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Equal</span><span class="p">(</span><span class="s">&quot;twa3&quot;</span><span class="p">,</span> <span class="nx">sntsa</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">TweetID</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Equal</span><span class="p">(</span><span class="s">&quot;twa2&quot;</span><span class="p">,</span> <span class="nx">sntsa</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">TweetID</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Equal</span><span class="p">(</span><span class="s">&quot;twa1&quot;</span><span class="p">,</span> <span class="nx">sntsa</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">TweetID</span><span class="p">)</span>
+
+	<span class="nx">sntsb</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">getSentiments</span><span class="p">(</span><span class="s">&quot;Company B&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Equal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">sntsb</span><span class="p">))</span>
+
+	<span class="nx">sntsc</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">getSentiments</span><span class="p">(</span><span class="s">&quot;Company C&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Equal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">sntsc</span><span class="p">))</span>
+
+	<span class="nx">sntsd</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">getSentiments</span><span class="p">(</span><span class="s">&quot;Company D&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Equal</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">sntsd</span><span class="p">))</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">suite</span> <span class="o">*</span><span class="nx">elephantTestSuite</span><span class="p">)</span> <span class="nx">TestDDeleteSentiments</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">deleteOldRaws</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+
+	<span class="nx">sntsa</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">getSentiments</span><span class="p">(</span><span class="s">&quot;Company A&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Equal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">sntsa</span><span class="p">))</span>
+
+	<span class="nx">sntsb</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">getSentiments</span><span class="p">(</span><span class="s">&quot;Company B&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Equal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">sntsb</span><span class="p">))</span>
+
+	<span class="nx">sntsc</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">getSentiments</span><span class="p">(</span><span class="s">&quot;Company C&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Equal</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">sntsc</span><span class="p">))</span>
+
+	<span class="nx">sntsd</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nx">getSentiments</span><span class="p">(</span><span class="s">&quot;Company D&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Equal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">sntsd</span><span class="p">))</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="nx">TestElephant</span><span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">T</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Run</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nb">new</span><span class="p">(</span><span class="nx">elephantTestSuite</span><span class="p">))</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">suite</span> <span class="o">*</span><span class="nx">elephantTestSuite</span><span class="p">)</span> <span class="nx">TearDownSuite</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">suite</span><span class="p">.</span><span class="nx">Assert</span><span class="p">().</span><span class="nx">Nil</span><span class="p">(</span><span class="nx">suite</span><span class="p">.</span><span class="nx">myelephant</span><span class="p">.</span><span class="nb">close</span><span class="p">())</span>
+<span class="p">}</span>
+
+</pre></div>
+            </td>
+          </tr>
+          
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

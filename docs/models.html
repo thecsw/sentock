@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>models.go</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="gocco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <div id="jump_to">
+        Jump To &hellip;
+        <div id="jump_wrapper">
+          <div id="jump_page">
+              
+              <a class="source" href="admin.html">
+                  admin.go
+              </a>
+              
+              <a class="source" href="elephant.html">
+                  elephant.go
+              </a>
+              
+              <a class="source" href="elephant_test.html">
+                  elephant_test.go
+              </a>
+              
+              <a class="source" href="models.html">
+                  models.go
+              </a>
+              
+              <a class="source" href="sentiments.html">
+                  sentiments.go
+              </a>
+              
+              <a class="source" href="server.html">
+                  server.go
+              </a>
+              
+              <a class="source" href="vars.html">
+                  vars.go
+              </a>
+              
+          </div>
+        </div>
+      </div>
+    
+    <table cellpadding="0" cellspacing="0">
+      <thead>
+        <tr>
+          <th class="docs">
+            <h1>
+                models.go
+            </h1>
+          </th>
+          <th class="code">
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+          
+          <tr id="section-1">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+                
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span></span><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="s">&quot;github.com/jinzhu/gorm&quot;</span>
+
+<span class="kd">var</span> <span class="p">(</span>
+	<span class="nx">db</span>               <span class="o">*</span><span class="nx">gorm</span><span class="p">.</span><span class="nx">DB</span>
+	<span class="nx">dbType</span>           <span class="p">=</span> <span class="s">&quot;postgres&quot;</span>
+	<span class="nx">connectionString</span> <span class="p">=</span> <span class="s">&quot;postgresql://sandy:pass@postgres:5432/sentock?sslmode=disable&quot;</span>
+<span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-2">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+                <p>Company is the table schema for storing the companies
+we are doing the sentimental analysis on</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">type</span> <span class="nx">Company</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span class="nx">gorm</span><span class="p">.</span><span class="nx">Model</span> <span class="s">`json:&quot;-&quot;`</span>
+
+	<span class="nx">Name</span>       <span class="kt">string</span>      <span class="s">`gorm:&quot;unique&quot; json:&quot;name&quot;`</span>
+	<span class="nx">Sentiments</span> <span class="p">[]</span><span class="nx">Sentiment</span> <span class="s">`json:&quot;-&quot;`</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-3">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+                <p>Sentiment is the table for raw sentiments</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">type</span> <span class="nx">Sentiment</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span class="nx">gorm</span><span class="p">.</span><span class="nx">Model</span> <span class="s">`json:&quot;-&quot;`</span>
+
+	<span class="nx">TweetID</span>   <span class="kt">string</span>  <span class="s">`gorm:&quot;unique;&quot; json:&quot;tweet_id&quot;`</span>
+	<span class="nx">Unix</span>      <span class="kt">int</span>     <span class="s">`json:&quot;unix&quot;`</span>
+	<span class="nx">Sentiment</span> <span class="kt">float64</span> <span class="s">`json:&quot;sentiment&quot;`</span>
+	<span class="nx">CompanyID</span> <span class="kt">uint</span>    <span class="s">`json:&quot;-&quot;`</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-4">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+                <p>Average is the table for processed sentiments</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">type</span> <span class="nx">Average</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span class="nx">gorm</span><span class="p">.</span><span class="nx">Model</span> <span class="s">`json:&quot;-&quot;`</span>
+
+	<span class="nx">Unix</span>      <span class="kt">int</span>     <span class="s">`json:&quot;unix&quot;`</span>
+	<span class="nx">Average</span>   <span class="kt">float64</span> <span class="s">`json:&quot;average&quot;`</span>
+	<span class="nx">CompanyID</span> <span class="kt">uint</span>    <span class="s">`json:&quot;-&quot;`</span>
+<span class="p">}</span>
+
+</pre></div>
+            </td>
+          </tr>
+          
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

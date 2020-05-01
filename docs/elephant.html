@@ -1,0 +1,437 @@
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>elephant.go</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="gocco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <div id="jump_to">
+        Jump To &hellip;
+        <div id="jump_wrapper">
+          <div id="jump_page">
+              
+              <a class="source" href="admin.html">
+                  admin.go
+              </a>
+              
+              <a class="source" href="elephant.html">
+                  elephant.go
+              </a>
+              
+              <a class="source" href="elephant_test.html">
+                  elephant_test.go
+              </a>
+              
+              <a class="source" href="models.html">
+                  models.go
+              </a>
+              
+              <a class="source" href="sentiments.html">
+                  sentiments.go
+              </a>
+              
+              <a class="source" href="server.html">
+                  server.go
+              </a>
+              
+              <a class="source" href="vars.html">
+                  vars.go
+              </a>
+              
+          </div>
+        </div>
+      </div>
+    
+    <table cellpadding="0" cellspacing="0">
+      <thead>
+        <tr>
+          <th class="docs">
+            <h1>
+                elephant.go
+            </h1>
+          </th>
+          <th class="code">
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+          
+          <tr id="section-1">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+                
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span></span><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+	<span class="s">&quot;errors&quot;</span>
+	<span class="s">&quot;fmt&quot;</span>
+	<span class="s">&quot;time&quot;</span>
+
+	<span class="nx">log</span> <span class="s">&quot;github.com/sirupsen/logrus&quot;</span>
+
+	<span class="s">&quot;github.com/jinzhu/gorm&quot;</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-2">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+                <p>We need this for gorm to connect to postgres</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">_</span> <span class="s">&quot;github.com/jinzhu/gorm/dialects/postgres&quot;</span>
+<span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-3">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+                <p>elephant is a struct to define DB interaction</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">type</span> <span class="nx">elephant</span> <span class="kd">struct</span><span class="p">{}</span>
+
+<span class="kd">var</span> <span class="p">(</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-4">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+                <p>Elephant is the exposed model into DB</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">Elephant</span> <span class="p">=</span> <span class="o">&amp;</span><span class="nx">elephant</span><span class="p">{}</span>
+<span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-5">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+                <p>connectDB connects to the database</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="p">(</span><span class="o">*</span><span class="nx">elephant</span><span class="p">)</span> <span class="nx">connectDB</span><span class="p">(</span><span class="nx">database</span> <span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="o">*</span><span class="nx">gorm</span><span class="p">.</span><span class="nx">DB</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+	<span class="kd">const</span> <span class="nx">timeout</span> <span class="p">=</span> <span class="mi">1</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Minute</span>
+	<span class="nx">deadline</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">().</span><span class="nx">Add</span><span class="p">(</span><span class="nx">timeout</span><span class="p">)</span>
+	<span class="nx">tries</span> <span class="o">:=</span> <span class="mi">0</span>
+	<span class="k">for</span> <span class="nx">tries</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">().</span><span class="nx">Before</span><span class="p">(</span><span class="nx">deadline</span><span class="p">);</span> <span class="nx">tries</span><span class="o">++</span> <span class="p">{</span>
+		<span class="nx">db</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">gorm</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">dbType</span><span class="p">,</span> <span class="nx">database</span><span class="p">)</span>
+		<span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="nx">db</span><span class="p">,</span> <span class="kc">nil</span>
+		<span class="p">}</span>
+		<span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;Couldn&#39;t connect to the database (%s). Retrying...&quot;</span><span class="p">,</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">())</span>
+		<span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span> <span class="o">&lt;&lt;</span> <span class="nb">uint</span><span class="p">(</span><span class="nx">tries</span><span class="p">))</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-6">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+                <p>Sleep for 2 seconds</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+	<span class="k">return</span> <span class="kc">nil</span><span class="p">,</span> <span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;failed connect to the database after %d attempts&quot;</span><span class="p">,</span> <span class="nx">tries</span><span class="p">)</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-7">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+                <p>createCompany adds company to the database</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="p">(</span><span class="o">*</span><span class="nx">elephant</span><span class="p">)</span> <span class="nx">createCompany</span><span class="p">(</span><span class="nx">name</span> <span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="o">*</span><span class="nx">Company</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">res</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">Company</span><span class="p">{</span><span class="nx">Name</span><span class="p">:</span> <span class="nx">name</span><span class="p">}</span>
+	<span class="k">return</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Create</span><span class="p">(</span><span class="nx">res</span><span class="p">).</span><span class="nx">Error</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-8">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+                <p>createSentiment adds a raw sentiment datapoint to the database</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="p">(</span><span class="nx">e</span> <span class="o">*</span><span class="nx">elephant</span><span class="p">)</span> <span class="nx">createSentiment</span><span class="p">(</span><span class="nx">tweetID</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">unix</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">sentiment</span> <span class="kt">float64</span><span class="p">,</span> <span class="nx">company</span> <span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="o">*</span><span class="nx">Sentiment</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">ans</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">Sentiment</span><span class="p">{</span>
+		<span class="nx">TweetID</span><span class="p">:</span>   <span class="nx">tweetID</span><span class="p">,</span>
+		<span class="nx">Unix</span><span class="p">:</span>      <span class="nx">unix</span><span class="p">,</span>
+		<span class="nx">Sentiment</span><span class="p">:</span> <span class="nx">sentiment</span><span class="p">,</span>
+		<span class="nx">CompanyID</span><span class="p">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">ctod</span><span class="p">(</span><span class="nx">company</span><span class="p">,</span> <span class="kc">true</span><span class="p">),</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="nx">ans</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Create</span><span class="p">(</span><span class="nx">ans</span><span class="p">).</span><span class="nx">Error</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-9">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+                <p>createWindowAverage adds a list of averaged sentiment datapoints to the database</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="p">(</span><span class="nx">e</span> <span class="o">*</span><span class="nx">elephant</span><span class="p">)</span> <span class="nx">createWindowAverage</span><span class="p">(</span><span class="nx">unix</span> <span class="p">[]</span><span class="kt">int</span><span class="p">,</span> <span class="nx">averages</span> <span class="p">[]</span><span class="kt">float64</span><span class="p">,</span> <span class="nx">company</span> <span class="kt">string</span><span class="p">)</span> <span class="p">([]</span><span class="o">*</span><span class="nx">Average</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">end</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="o">*</span><span class="nx">Average</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">unix</span><span class="p">))</span>
+	<span class="kd">var</span> <span class="nx">err</span> <span class="kt">error</span>
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nx">averages</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="nx">unix</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="kc">nil</span><span class="p">,</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;Length of unix timestamps and averages don&#39;t match!&quot;</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="k">for</span> <span class="nx">ind</span><span class="p">,</span> <span class="nx">time</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">unix</span> <span class="p">{</span>
+		<span class="nx">ave</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">Average</span><span class="p">{</span>
+			<span class="nx">Unix</span><span class="p">:</span>      <span class="nx">time</span><span class="p">,</span>
+			<span class="nx">Average</span><span class="p">:</span>   <span class="nx">averages</span><span class="p">[</span><span class="nx">ind</span><span class="p">],</span>
+			<span class="nx">CompanyID</span><span class="p">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">ctod</span><span class="p">(</span><span class="nx">company</span><span class="p">,</span> <span class="kc">true</span><span class="p">),</span>
+		<span class="p">}</span>
+		<span class="nx">end</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">end</span><span class="p">,</span> <span class="nx">ave</span><span class="p">)</span>
+		<span class="nx">err</span> <span class="p">=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Create</span><span class="p">(</span><span class="nx">ave</span><span class="p">).</span><span class="nx">Error</span>
+		<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+			<span class="k">break</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="nx">end</span><span class="p">,</span> <span class="nx">err</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-10">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+                <p>getSentiments gets raw sentiments from &ldquo;sentiments&rdquo; table for all values
+that are connected to company and bound by after &lt; t &lt; before</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="p">(</span><span class="nx">e</span> <span class="o">*</span><span class="nx">elephant</span><span class="p">)</span> <span class="nx">getSentiments</span><span class="p">(</span><span class="nx">company</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">before</span><span class="p">,</span> <span class="nx">after</span> <span class="kt">int</span><span class="p">)</span> <span class="p">([]</span><span class="nx">Sentiment</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">result</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="nx">Sentiment</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
+	<span class="k">return</span> <span class="nx">result</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Model</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">fcompany</span><span class="p">(</span><span class="nx">company</span><span class="p">)).</span>
+		<span class="nx">Where</span><span class="p">(</span><span class="s">&quot;unix &gt; ?&quot;</span><span class="p">,</span> <span class="nx">after</span><span class="p">).</span>
+		<span class="nx">Where</span><span class="p">(</span><span class="s">&quot;unix &lt; ?&quot;</span><span class="p">,</span> <span class="nx">before</span><span class="p">).</span>
+		<span class="nx">Order</span><span class="p">(</span><span class="s">&quot;unix desc&quot;</span><span class="p">).</span>
+		<span class="nx">Related</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">result</span><span class="p">).</span>
+		<span class="nx">Error</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-11">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+                <p>getCompanies returns a string list of all companies in &ldquo;companies&rdquo; table</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="p">(</span><span class="nx">e</span> <span class="o">*</span><span class="nx">elephant</span><span class="p">)</span> <span class="nx">getCompanies</span><span class="p">()</span> <span class="p">([]</span><span class="kt">string</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">result</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">string</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+	<span class="k">return</span> <span class="nx">result</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Model</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">Company</span><span class="p">{}).</span>
+		<span class="nx">Pluck</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">result</span><span class="p">).</span>
+		<span class="nx">Error</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-12">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+                <p>getLatestAverageSentiment gets latest unix timestamp for
+company. Used by josh for anchoring and starting processing
+only from that point onward</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="p">(</span><span class="nx">e</span> <span class="o">*</span><span class="nx">elephant</span><span class="p">)</span> <span class="nx">getLatestAverageSentiment</span><span class="p">(</span><span class="nx">company</span> <span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">result</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">Average</span><span class="p">{}</span>
+	<span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Model</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">fcompany</span><span class="p">(</span><span class="nx">company</span><span class="p">)).</span>
+		<span class="nx">Order</span><span class="p">(</span><span class="s">&quot;unix desc&quot;</span><span class="p">).</span>
+		<span class="nx">Limit</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span>
+		<span class="nx">Related</span><span class="p">(</span><span class="nx">result</span><span class="p">).</span>
+		<span class="nx">Error</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;record not found&quot;</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">nil</span>
+		<span class="p">}</span>
+		<span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">err</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="nx">result</span><span class="p">.</span><span class="nx">Unix</span><span class="p">,</span> <span class="nx">err</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-13">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+                <p>getAverages is the same as getSentiments but only returns already
+processed values</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="p">(</span><span class="nx">e</span> <span class="o">*</span><span class="nx">elephant</span><span class="p">)</span> <span class="nx">getAverages</span><span class="p">(</span><span class="nx">company</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">before</span><span class="p">,</span> <span class="nx">after</span> <span class="kt">int</span><span class="p">)</span> <span class="p">([]</span><span class="nx">Average</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">result</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="nx">Average</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
+	<span class="k">return</span> <span class="nx">result</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Model</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">fcompany</span><span class="p">(</span><span class="nx">company</span><span class="p">)).</span>
+		<span class="nx">Where</span><span class="p">(</span><span class="s">&quot;unix &gt; ?&quot;</span><span class="p">,</span> <span class="nx">after</span><span class="p">).</span>
+		<span class="nx">Where</span><span class="p">(</span><span class="s">&quot;unix &lt; ?&quot;</span><span class="p">,</span> <span class="nx">before</span><span class="p">).</span>
+		<span class="nx">Order</span><span class="p">(</span><span class="s">&quot;unix asc&quot;</span><span class="p">).</span>
+		<span class="nx">Related</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">result</span><span class="p">).</span>
+		<span class="nx">Error</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-14">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+                <p>deleteOldRaws deletes all raw sentiments that are older than before</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="p">(</span><span class="nx">e</span> <span class="o">*</span><span class="nx">elephant</span><span class="p">)</span> <span class="nx">deleteOldRaws</span><span class="p">(</span><span class="nx">before</span> <span class="kt">int64</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Unscoped</span><span class="p">().</span><span class="nx">Model</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">Sentiment</span><span class="p">{}).</span>
+		<span class="nx">Where</span><span class="p">(</span><span class="s">&quot;unix &lt; ?&quot;</span><span class="p">,</span> <span class="nx">before</span><span class="p">).</span>
+		<span class="nx">Delete</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">Sentiment</span><span class="p">{}).</span>
+		<span class="nx">Error</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-15">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+                <p>close closes the connection to the database</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="p">(</span><span class="o">*</span><span class="nx">elephant</span><span class="p">)</span> <span class="nb">close</span><span class="p">()</span> <span class="kt">error</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-16">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+                <p>autoMigrate automatically sets up all the tables that are used</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="p">(</span><span class="o">*</span><span class="nx">elephant</span><span class="p">)</span> <span class="nx">autoMigrate</span><span class="p">()</span> <span class="kt">error</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="nx">db</span><span class="p">.</span><span class="nx">AutoMigrate</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">Company</span><span class="p">{},</span> <span class="o">&amp;</span><span class="nx">Sentiment</span><span class="p">{},</span> <span class="o">&amp;</span><span class="nx">Average</span><span class="p">{}).</span><span class="nx">Error</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">e</span> <span class="o">*</span><span class="nx">elephant</span><span class="p">)</span> <span class="nx">fcompany</span><span class="p">(</span><span class="nx">company</span> <span class="kt">string</span><span class="p">)</span> <span class="o">*</span><span class="nx">Company</span> <span class="p">{</span>
+	<span class="nx">res</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">Company</span><span class="p">{}</span>
+	<span class="nx">res</span><span class="p">.</span><span class="nx">ID</span> <span class="p">=</span> <span class="nx">e</span><span class="p">.</span><span class="nx">ctod</span><span class="p">(</span><span class="nx">company</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">res</span><span class="p">.</span><span class="nx">ID</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+		<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;failed to resolve company: &quot;</span><span class="p">,</span> <span class="nx">company</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="nx">res</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-17">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+                <p>ctod takes a company and returns the company&rsquo;s id
+(and possibly makes the company a new entry if it wasn&rsquo;t there already)</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="p">(</span><span class="nx">e</span> <span class="o">*</span><span class="nx">elephant</span><span class="p">)</span> <span class="nx">ctod</span><span class="p">(</span><span class="nx">company</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">autocreate</span> <span class="kt">bool</span><span class="p">)</span> <span class="kt">uint</span> <span class="p">{</span>
+	<span class="nx">companyID</span> <span class="o">:=</span> <span class="nb">uint</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+	<span class="kd">var</span> <span class="nx">ok</span> <span class="kt">bool</span>
+	<span class="k">if</span> <span class="nx">companyID</span><span class="p">,</span> <span class="nx">ok</span> <span class="p">=</span> <span class="nx">cachedNames</span><span class="p">[</span><span class="nx">company</span><span class="p">];</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
+		<span class="nx">res</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">Company</span><span class="p">{}</span>
+		<span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Where</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">Company</span><span class="p">{</span><span class="nx">Name</span><span class="p">:</span> <span class="nx">company</span><span class="p">}).</span><span class="nx">First</span><span class="p">(</span><span class="nx">res</span><span class="p">).</span><span class="nx">Error</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-18">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+                <p>Not found, automatically make one</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="k">if</span> <span class="nx">res</span><span class="p">.</span><span class="nx">ID</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+			<span class="k">if</span> <span class="p">!</span><span class="nx">autocreate</span> <span class="p">{</span>
+				<span class="k">return</span> <span class="mi">0</span>
+			<span class="p">}</span>
+			<span class="nx">c</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">e</span><span class="p">.</span><span class="nx">createCompany</span><span class="p">(</span><span class="nx">company</span><span class="p">)</span>
+			<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+				<span class="k">return</span> <span class="mi">0</span>
+			<span class="p">}</span>
+			<span class="nx">res</span><span class="p">.</span><span class="nx">ID</span> <span class="p">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">ID</span>
+		<span class="p">}</span>
+		<span class="nx">cachedNames</span><span class="p">[</span><span class="nx">company</span><span class="p">]</span> <span class="p">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">ID</span>
+		<span class="nx">companyID</span> <span class="p">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">ID</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="nx">companyID</span>
+<span class="p">}</span>
+
+</pre></div>
+            </td>
+          </tr>
+          
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
