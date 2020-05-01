@@ -9,8 +9,8 @@ export class StockGraph {
     numDays
     /**
      * Creates a stock graph
-     * @param {string} name Company name
-     * @param {string} symbol Stock ticker symbol
+     * @param name Company name
+     * @param symbol Stock ticker symbol
      */
     constructor(name, symbol, apiKey) {
         this.error = false
@@ -38,7 +38,7 @@ export class StockGraph {
 
     /**
      * Makes a call to the sentiment API, and returns the json from it
-     * @param {string} symbol Stock trading symbol
+     * @param symbol Stock trading symbol
      */
 
     sentimentApiCall(name) {
@@ -50,7 +50,7 @@ export class StockGraph {
 
     /**
      * Makes a call to the stocks, and returns the json from it
-     * @param {string} symbol Stock trading symbol
+     * @param symbol Stock trading symbol
      */
     stockApiCall(symbol, apiKey) {
         // const apiKey = 'VF5PZ9DBDNDKYYSN'
@@ -62,9 +62,9 @@ export class StockGraph {
 
     /**
      * Draws the graphs in their respective context
-     * @param {[number]} stock stock data
-     * @param {[number]} sentiment sentiment data
-     * @param {string} symbol The stock trading symbol
+     * @param stock stock data
+     * @param sentiment sentiment data
+     * @param symbol The stock trading symbol
      */
     draw(stock, sentiment, symbol) {
         // console.log(symbol, 'stock', stock.slice(-this.numDays))
@@ -123,7 +123,7 @@ export class StockGraph {
 
     /**
      * Generates the list of labels for the last n days
-     * @param {number} n number of days
+     * @param n number of days
      */
     getLabels(n) {
         return new Array(n).fill(' ')
@@ -140,7 +140,7 @@ export class StockGraph {
 
     /**
      * converts the JSON object from the API into a list of sentiment data
-     * @param {object} json The JSON object to be converted
+     * @param json The JSON object to be converted
      */
     json2sentiments(json) {
         return json.map(e => e[1])
@@ -148,7 +148,7 @@ export class StockGraph {
 
     /**
      * Converts the JSON object from the API into a list of stock data
-     * @param {object} json The JSON object to be converted
+     * @param json The JSON object to be converted
      */
     json2stocks(json) {
         const minKey = 'Time Series (1min)'
