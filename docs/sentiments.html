@@ -1,0 +1,709 @@
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>sentiments.go</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="gocco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <div id="jump_to">
+        Jump To &hellip;
+        <div id="jump_wrapper">
+          <div id="jump_page">
+              
+              <a class="source" href="admin.html">
+                  admin.go
+              </a>
+              
+              <a class="source" href="elephant.html">
+                  elephant.go
+              </a>
+              
+              <a class="source" href="elephant_test.html">
+                  elephant_test.go
+              </a>
+              
+              <a class="source" href="models.html">
+                  models.go
+              </a>
+              
+              <a class="source" href="sentiments.html">
+                  sentiments.go
+              </a>
+              
+              <a class="source" href="server.html">
+                  server.go
+              </a>
+              
+              <a class="source" href="vars.html">
+                  vars.go
+              </a>
+              
+          </div>
+        </div>
+      </div>
+    
+    <table cellpadding="0" cellspacing="0">
+      <thead>
+        <tr>
+          <th class="docs">
+            <h1>
+                sentiments.go
+            </h1>
+          </th>
+          <th class="code">
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+          
+          <tr id="section-1">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+                
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span></span><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+	<span class="s">&quot;encoding/csv&quot;</span>
+	<span class="s">&quot;encoding/json&quot;</span>
+	<span class="s">&quot;net/http&quot;</span>
+	<span class="s">&quot;strconv&quot;</span>
+	<span class="s">&quot;time&quot;</span>
+
+	<span class="nx">log</span> <span class="s">&quot;github.com/sirupsen/logrus&quot;</span>
+<span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-2">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+                <p>addRawSentiment is an endpoint that takes a payload of the layout sentimentPayload and adds
+the raw sentiment to the db</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">addRawSentiment</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span> <span class="p">{</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-3">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+                <p>get sentiment data:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">payload</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">sentimentPayload</span><span class="p">{}</span>
+	<span class="nx">decoder</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewDecoder</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">Body</span><span class="p">)</span>
+	<span class="nx">err</span> <span class="o">:=</span> <span class="nx">decoder</span><span class="p">.</span><span class="nx">Decode</span><span class="p">(</span><span class="nx">payload</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Failed decoding: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+		<span class="k">return</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-4">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+                <p>ensure reasonable inputs:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="k">if</span> <span class="nx">payload</span><span class="p">.</span><span class="nx">TweetID</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="o">||</span> <span class="nx">payload</span><span class="p">.</span><span class="nx">Unix</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span> <span class="nx">payload</span><span class="p">.</span><span class="nx">Company</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusBadRequest</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Received empty params.&quot;</span><span class="p">})</span>
+		<span class="k">return</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-5">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+                <p>add sentiment to db:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">res</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">Elephant</span><span class="p">.</span><span class="nx">createSentiment</span><span class="p">(</span>
+		<span class="nx">payload</span><span class="p">.</span><span class="nx">TweetID</span><span class="p">,</span>
+		<span class="nx">payload</span><span class="p">.</span><span class="nx">Unix</span><span class="p">,</span>
+		<span class="nx">payload</span><span class="p">.</span><span class="nx">Sentiment</span><span class="p">,</span>
+		<span class="nx">payload</span><span class="p">.</span><span class="nx">Company</span><span class="p">,</span>
+	<span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Failed committing to DB: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
+	<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span>
+	<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="o">*</span><span class="nx">res</span><span class="p">)</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-6">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+                <p>getMarketSentiments returns the sentiments since last market open
+until the last close or now, the last one is whichever closer</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">getMarketSentiments</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">u</span> <span class="o">:=</span> <span class="nx">r</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nx">Query</span><span class="p">()</span>
+	<span class="nx">company</span> <span class="o">:=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;company&quot;</span><span class="p">)</span>
+	<span class="nx">apiType</span> <span class="o">:=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;api_type&quot;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">company</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusBadRequest</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Received empty params.&quot;</span><span class="p">})</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
+	<span class="nx">now</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">().</span><span class="nx">UTC</span><span class="p">()</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-7">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+                <p>Set the default start and end to today&rsquo;s 14:30 -&gt; 21:00</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">start</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Date</span><span class="p">(</span><span class="nx">now</span><span class="p">.</span><span class="nx">Year</span><span class="p">(),</span> <span class="nx">now</span><span class="p">.</span><span class="nx">Month</span><span class="p">(),</span> <span class="nx">now</span><span class="p">.</span><span class="nx">Day</span><span class="p">(),</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">now</span><span class="p">.</span><span class="nx">Location</span><span class="p">())</span>
+	<span class="nx">end</span> <span class="o">:=</span> <span class="nx">start</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">6</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Hour</span> <span class="o">+</span> <span class="mi">30</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Minute</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-8">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+                <p>Handle weekends</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="k">switch</span> <span class="p">{</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-9">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+                <p>If we are on Saturday or it&rsquo;s before 14:30, grab the day before 14:30 -&gt; 21:00</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="k">case</span> <span class="nx">now</span><span class="p">.</span><span class="nx">Weekday</span><span class="p">().</span><span class="nx">String</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;Saturday&quot;</span> <span class="o">||</span> <span class="nx">now</span><span class="p">.</span><span class="nx">Before</span><span class="p">(</span><span class="nx">start</span><span class="p">):</span>
+		<span class="nx">start</span> <span class="p">=</span> <span class="nx">start</span><span class="p">.</span><span class="nx">AddDate</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+		<span class="nx">end</span> <span class="p">=</span> <span class="nx">end</span><span class="p">.</span><span class="nx">AddDate</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-10">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+                <p>If we are on Sunday, remove 2 days</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="k">case</span> <span class="nx">now</span><span class="p">.</span><span class="nx">Weekday</span><span class="p">().</span><span class="nx">String</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;Sunday&quot;</span><span class="p">:</span>
+		<span class="nx">start</span> <span class="p">=</span> <span class="nx">start</span><span class="p">.</span><span class="nx">AddDate</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+		<span class="nx">end</span> <span class="p">=</span> <span class="nx">end</span><span class="p">.</span><span class="nx">AddDate</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-11">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+                <p>If we are before the market close, set it to now</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="k">case</span> <span class="nx">now</span><span class="p">.</span><span class="nx">Hour</span><span class="p">()</span> <span class="p">&lt;</span> <span class="mi">21</span><span class="p">:</span>
+		<span class="nx">end</span> <span class="p">=</span> <span class="nx">now</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-12">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+                <p>Default is do nothing and leave previous values</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="k">default</span><span class="p">:</span>
+		<span class="k">break</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-13">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+                <p>Get the averaged data:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">averages</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">Elephant</span><span class="p">.</span><span class="nx">getAverages</span><span class="p">(</span><span class="nx">company</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nx">end</span><span class="p">.</span><span class="nx">Unix</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="nx">start</span><span class="p">.</span><span class="nx">Unix</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Error getting sentiments: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+		<span class="k">return</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-14">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+                <p>PARSE CSV IF REQUESTED AND RETURN</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="k">if</span> <span class="nx">apiType</span> <span class="o">==</span> <span class="s">&quot;csv&quot;</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span>
+		<span class="nx">csv</span><span class="p">.</span><span class="nx">NewWriter</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">WriteAll</span><span class="p">(</span><span class="nx">averagesToString</span><span class="p">(</span><span class="nx">averages</span><span class="p">))</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
+
+	<span class="nx">points</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([][]</span><span class="kt">float64</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">averages</span><span class="p">))</span>
+	<span class="k">for</span> <span class="nx">ind</span><span class="p">,</span> <span class="nx">data</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">averages</span> <span class="p">{</span>
+		<span class="nx">points</span><span class="p">[</span><span class="nx">ind</span><span class="p">]</span> <span class="p">=</span> <span class="p">[]</span><span class="kt">float64</span><span class="p">{</span><span class="nb">float64</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">Unix</span><span class="p">),</span> <span class="nx">data</span><span class="p">.</span><span class="nx">Average</span><span class="p">}</span>
+	<span class="p">}</span>
+	<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span>
+	<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">points</span><span class="p">)</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-15">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+                <p>addWindowAverages takes a windowAvePayload and adds the averaged sentiments inside to the db</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">addWindowAverages</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span> <span class="p">{</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-16">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+                <p>get sentiment data:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">payload</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">windowAvePayload</span><span class="p">{}</span>
+	<span class="nx">decoder</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewDecoder</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">Body</span><span class="p">)</span>
+	<span class="nx">err</span> <span class="o">:=</span> <span class="nx">decoder</span><span class="p">.</span><span class="nx">Decode</span><span class="p">(</span><span class="nx">payload</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Failed decoding: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+		<span class="k">return</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-17">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+                <p>ensure reasonable inputs:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="k">if</span> <span class="nx">payload</span><span class="p">.</span><span class="nx">Company</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="o">||</span> <span class="nb">len</span><span class="p">(</span><span class="nx">payload</span><span class="p">.</span><span class="nx">Unix</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="nx">payload</span><span class="p">.</span><span class="nx">Averages</span><span class="p">)</span> <span class="o">||</span> <span class="nb">len</span><span class="p">(</span><span class="nx">payload</span><span class="p">.</span><span class="nx">Unix</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusBadRequest</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Received empty params.&quot;</span><span class="p">})</span>
+		<span class="k">return</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-18">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+                <p>add average sentiments to db:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">_</span><span class="p">,</span> <span class="nx">err</span> <span class="p">=</span> <span class="nx">Elephant</span><span class="p">.</span><span class="nx">createWindowAverage</span><span class="p">(</span>
+		<span class="nx">payload</span><span class="p">.</span><span class="nx">Unix</span><span class="p">,</span>
+		<span class="nx">payload</span><span class="p">.</span><span class="nx">Averages</span><span class="p">,</span>
+		<span class="nx">payload</span><span class="p">.</span><span class="nx">Company</span><span class="p">,</span>
+	<span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Failed committing to DB: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
+	<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-19">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+                <p>json.NewEncoder(w).Encode(*res)</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-20">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+                <p>getRawSentiments retrieves the raw sentiments from a specific company between
+two specific times from the db</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">getRawSentiments</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span> <span class="p">{</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-21">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+                <p>get inputs:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">u</span> <span class="o">:=</span> <span class="nx">r</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nx">Query</span><span class="p">()</span>
+	<span class="nx">company</span><span class="p">,</span> <span class="nx">before</span><span class="p">,</span> <span class="nx">after</span> <span class="o">:=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;company&quot;</span><span class="p">),</span> <span class="nx">u</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;before&quot;</span><span class="p">),</span> <span class="nx">u</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;after&quot;</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-22">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+                <p>ensure valid inputs:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="k">if</span> <span class="nx">before</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="o">||</span> <span class="nx">after</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="o">||</span> <span class="nx">company</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusBadRequest</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Received empty params.&quot;</span><span class="p">})</span>
+		<span class="k">return</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-23">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+                <p>make before and after ints</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">befr</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Atoi</span><span class="p">(</span><span class="nx">before</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Error converting before to int: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
+	<span class="nx">aftr</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Atoi</span><span class="p">(</span><span class="nx">after</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Error converting after to int: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+		<span class="k">return</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-24">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+                <p>call Elephant.getSentiments(company, before, after)</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">sentiments</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">Elephant</span><span class="p">.</span><span class="nx">getSentiments</span><span class="p">(</span><span class="nx">company</span><span class="p">,</span> <span class="nx">befr</span><span class="p">,</span> <span class="nx">aftr</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-25">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+                <p>make and fill in array containing just the unix timestamp and the sentiment value:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">points</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([][]</span><span class="kt">float64</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">sentiments</span><span class="p">))</span>
+	<span class="k">for</span> <span class="nx">ind</span><span class="p">,</span> <span class="nx">sent</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">sentiments</span> <span class="p">{</span>
+		<span class="nx">temp</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">ParseFloat</span><span class="p">(</span><span class="nx">sent</span><span class="p">.</span><span class="nx">TweetID</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-26">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+                <p>points[ind] = []float64{sent.Unix, sent.Sentiment, float64(strconv.ParseInt(sent.TweetID,10,0))}</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="nx">points</span><span class="p">[</span><span class="nx">ind</span><span class="p">]</span> <span class="p">=</span> <span class="p">[]</span><span class="kt">float64</span><span class="p">{</span><span class="nb">float64</span><span class="p">(</span><span class="nx">sent</span><span class="p">.</span><span class="nx">Unix</span><span class="p">),</span> <span class="nx">sent</span><span class="p">.</span><span class="nx">Sentiment</span><span class="p">,</span> <span class="nx">temp</span><span class="p">}</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-27">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+                <p>return the list of datapoints:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span>
+	<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">points</span><span class="p">)</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-28">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+                <p>getLatestSentiment retrieves the latest unix timestamp from the averaged sentiments in the db</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">getLatestSentiment</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">u</span> <span class="o">:=</span> <span class="nx">r</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nx">Query</span><span class="p">()</span>
+	<span class="nx">company</span> <span class="o">:=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;company&quot;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">company</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusBadRequest</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Received empty company.&quot;</span><span class="p">})</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
+	<span class="nx">answer</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">Elephant</span><span class="p">.</span><span class="nx">getLatestAverageSentiment</span><span class="p">(</span><span class="nx">company</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span>
+		<span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Error getting last average sentiment: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">())</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Error getting last average sentiment: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+		<span class="k">return</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-29">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+                <p>return the list of datapoints:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span>
+	<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">answer</span><span class="p">)</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-30">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+                <p>getCompanies is an endpoint that retrieves a list of the unique companies in the db</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">getCompanies</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">companies</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">Elephant</span><span class="p">.</span><span class="nx">getCompanies</span><span class="p">()</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Error getting companies: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+	<span class="p">}</span>
+	<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span>
+	<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">companies</span><span class="p">)</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-31">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+                <p>getSentiments is an endpoint to return processed</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">getSentiments</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">u</span> <span class="o">:=</span> <span class="nx">r</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nx">Query</span><span class="p">()</span>
+	<span class="nx">company</span> <span class="o">:=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;company&quot;</span><span class="p">)</span>
+	<span class="nx">before</span> <span class="o">:=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;before&quot;</span><span class="p">)</span>
+	<span class="nx">after</span> <span class="o">:=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;after&quot;</span><span class="p">)</span>
+	<span class="nx">apiType</span> <span class="o">:=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;api_type&quot;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">before</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="o">||</span> <span class="nx">after</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="o">||</span> <span class="nx">company</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusBadRequest</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Received empty params.&quot;</span><span class="p">})</span>
+		<span class="k">return</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-32">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+                <p>make before and after ints</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">befr</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Atoi</span><span class="p">(</span><span class="nx">before</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Error converting before to int: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
+	<span class="nx">aftr</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Atoi</span><span class="p">(</span><span class="nx">after</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Error converting after to int: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+		<span class="k">return</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-33">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+                <p>get the averaged data:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">averages</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">Elephant</span><span class="p">.</span><span class="nx">getAverages</span><span class="p">(</span><span class="nx">company</span><span class="p">,</span> <span class="nx">befr</span><span class="p">,</span> <span class="nx">aftr</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span>
+		<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;Error getting sentiments: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()})</span>
+		<span class="k">return</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-34">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+                <p>PARSE CSV IF REQUESTED AND RETURN</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="k">if</span> <span class="nx">apiType</span> <span class="o">==</span> <span class="s">&quot;csv&quot;</span> <span class="p">{</span>
+		<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span>
+		<span class="nx">csv</span><span class="p">.</span><span class="nx">NewWriter</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">WriteAll</span><span class="p">(</span><span class="nx">averagesToString</span><span class="p">(</span><span class="nx">averages</span><span class="p">))</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
+
+	<span class="nx">points</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([][]</span><span class="kt">float64</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">averages</span><span class="p">))</span>
+	<span class="k">for</span> <span class="nx">ind</span><span class="p">,</span> <span class="nx">data</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">averages</span> <span class="p">{</span>
+		<span class="nx">points</span><span class="p">[</span><span class="nx">ind</span><span class="p">]</span> <span class="p">=</span> <span class="p">[]</span><span class="kt">float64</span><span class="p">{</span><span class="nb">float64</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">Unix</span><span class="p">),</span> <span class="nx">data</span><span class="p">.</span><span class="nx">Average</span><span class="p">}</span>
+	<span class="p">}</span>
+	<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span>
+	<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">points</span><span class="p">)</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-35">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+                <p>averagesToString converts averages to CSV encoded strings</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">averagesToString</span><span class="p">(</span><span class="nx">averages</span> <span class="p">[]</span><span class="nx">Average</span><span class="p">)</span> <span class="p">[][]</span><span class="kt">string</span> <span class="p">{</span>
+	<span class="nx">csvData</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([][]</span><span class="kt">string</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">averages</span><span class="p">))</span>
+	<span class="k">for</span> <span class="nx">ind</span><span class="p">,</span> <span class="nx">data</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">averages</span> <span class="p">{</span>
+		<span class="nx">csvData</span><span class="p">[</span><span class="nx">ind</span><span class="p">]</span> <span class="p">=</span> <span class="p">[]</span><span class="kt">string</span><span class="p">{</span>
+			<span class="nx">strconv</span><span class="p">.</span><span class="nx">FormatInt</span><span class="p">(</span><span class="nb">int64</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">Unix</span><span class="p">),</span> <span class="mi">10</span><span class="p">),</span>
+			<span class="nx">strconv</span><span class="p">.</span><span class="nx">FormatFloat</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">Average</span><span class="p">,</span> <span class="sc">&#39;f&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="nx">csvData</span>
+<span class="p">}</span>
+
+</pre></div>
+            </td>
+          </tr>
+          
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

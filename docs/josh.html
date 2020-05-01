@@ -1,0 +1,633 @@
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>josh.go</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="gocco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <table cellpadding="0" cellspacing="0">
+      <thead>
+        <tr>
+          <th class="docs">
+            <h1>
+                josh.go
+            </h1>
+          </th>
+          <th class="code">
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+          
+          <tr id="section-1">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+                
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span></span><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+	<span class="s">&quot;bytes&quot;</span>
+	<span class="s">&quot;encoding/json&quot;</span>
+	<span class="s">&quot;errors&quot;</span>
+	<span class="s">&quot;fmt&quot;</span>
+	<span class="s">&quot;net/http&quot;</span>
+	<span class="s">&quot;net/url&quot;</span>
+	<span class="s">&quot;os&quot;</span>
+	<span class="s">&quot;os/signal&quot;</span>
+	<span class="s">&quot;strconv&quot;</span>
+	<span class="s">&quot;strings&quot;</span>
+	<span class="s">&quot;time&quot;</span>
+
+	<span class="nx">log</span> <span class="s">&quot;github.com/sirupsen/logrus&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">const</span> <span class="p">(</span>
+	<span class="nx">serverIP</span>            <span class="p">=</span> <span class="s">&quot;http://server:10000&quot;</span>
+	<span class="nx">companiesVals</span>       <span class="p">=</span> <span class="nx">serverIP</span> <span class="o">+</span> <span class="s">&quot;/companies&quot;</span>
+	<span class="nx">globMarketVals</span>      <span class="p">=</span> <span class="nx">serverIP</span> <span class="o">+</span> <span class="s">&quot;/sentiments/market&quot;</span>
+	<span class="nx">globpostAves</span>        <span class="p">=</span> <span class="nx">serverIP</span> <span class="o">+</span> <span class="s">&quot;/sentiments/averages&quot;</span>
+	<span class="nx">globlatestsentiment</span> <span class="p">=</span> <span class="nx">serverIP</span> <span class="o">+</span> <span class="s">&quot;/sentiments/latest&quot;</span>
+	<span class="nx">globrawsentiments</span>   <span class="p">=</span> <span class="nx">serverIP</span> <span class="o">+</span> <span class="s">&quot;/sentiments/raw&quot;</span>
+<span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-2">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+                <p>windowSmoothing is a function that takes a list of datapoints (unix timestamp, sentiment value),
+a starting value to calculate, and a window size and
+returns a list of datapoints with values: (unix timestamp, ave sentiment for past hour)</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">windowSmoothing</span><span class="p">(</span><span class="nx">raws</span> <span class="p">[][]</span><span class="kt">float64</span><span class="p">,</span> <span class="nx">front</span><span class="p">,</span> <span class="nx">window</span> <span class="kt">int64</span><span class="p">)</span> <span class="p">[][]</span><span class="kt">float64</span> <span class="p">{</span>
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nx">raws</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+		<span class="nx">log</span><span class="p">.</span><span class="nx">Error</span><span class="p">(</span><span class="s">&quot;no data to window smooth&quot;</span><span class="p">)</span>
+		<span class="k">return</span> <span class="p">[][]</span><span class="kt">float64</span><span class="p">{}</span>
+	<span class="p">}</span>
+	<span class="kd">var</span> <span class="nx">end</span> <span class="p">=</span> <span class="nb">make</span><span class="p">([][]</span><span class="kt">float64</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+	<span class="nx">back</span> <span class="o">:=</span> <span class="nx">front</span> <span class="o">-</span> <span class="nx">window</span>
+	<span class="nx">frontind</span> <span class="o">:=</span> <span class="nb">len</span><span class="p">(</span><span class="nx">raws</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+	<span class="nx">backind</span> <span class="o">:=</span> <span class="nb">len</span><span class="p">(</span><span class="nx">raws</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+	<span class="nx">sum</span> <span class="o">:=</span> <span class="mf">0.0</span>
+	<span class="nx">size</span> <span class="o">:=</span> <span class="mi">0</span>
+	<span class="k">for</span> <span class="nx">front</span> <span class="p">&lt;</span> <span class="nb">int64</span><span class="p">(</span><span class="nx">raws</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="nx">frontind</span> <span class="p">&gt;</span> <span class="o">-</span><span class="mi">1</span> <span class="p">{</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-3">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+                <p>find new frontind (subtracting as we go)</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="k">for</span> <span class="nb">int64</span><span class="p">(</span><span class="nx">raws</span><span class="p">[</span><span class="nx">frontind</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="p">&lt;</span> <span class="nx">front</span> <span class="o">&amp;&amp;</span> <span class="nx">frontind</span> <span class="p">&gt;</span> <span class="o">-</span><span class="mi">1</span> <span class="p">{</span>
+			<span class="nx">sum</span> <span class="o">+=</span> <span class="nx">raws</span><span class="p">[</span><span class="nx">frontind</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+			<span class="nx">frontind</span><span class="o">--</span>
+			<span class="nx">size</span><span class="o">++</span>
+		<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-4">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+                <p>find new backind (subtracting as we go)</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="k">for</span> <span class="nb">int64</span><span class="p">(</span><span class="nx">raws</span><span class="p">[</span><span class="nx">backind</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="p">&lt;</span> <span class="nx">back</span> <span class="o">&amp;&amp;</span> <span class="nx">backind</span> <span class="p">&gt;</span> <span class="o">-</span><span class="mi">1</span> <span class="p">{</span>
+			<span class="nx">sum</span> <span class="o">-=</span> <span class="nx">raws</span><span class="p">[</span><span class="nx">backind</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+			<span class="nx">backind</span><span class="o">--</span>
+			<span class="nx">size</span><span class="o">--</span>
+		<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-5">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+                <p>get new average, assign to end</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="k">if</span> <span class="nx">size</span> <span class="o">&gt;=</span> <span class="mi">15</span> <span class="p">{</span>
+			<span class="nx">end</span> <span class="p">=</span> <span class="nb">append</span><span class="p">([][]</span><span class="kt">float64</span><span class="p">{[]</span><span class="kt">float64</span><span class="p">{</span><span class="nb">float64</span><span class="p">(</span><span class="nx">front</span><span class="p">),</span> <span class="nx">sum</span> <span class="o">/</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">size</span><span class="p">)}},</span> <span class="nx">end</span><span class="o">...</span><span class="p">)</span> <span class="c1">//prepend to ensure descending chronological order</span>
+		<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-6">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+                <p>increment front (and back)</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="nx">front</span> <span class="o">+=</span> <span class="mi">60</span>
+		<span class="nx">back</span> <span class="o">+=</span> <span class="mi">60</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="nx">end</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-7">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+                <p>getLatest queries the server in order to get the latest average sentiment calculated from ip=latestsentiment and company=company</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">getLatest</span><span class="p">(</span><span class="nx">company</span><span class="p">,</span> <span class="nx">latestsentiment</span> <span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-8">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+                <p>check how far calculations have come (assumes everything up to the most recent empty minute has already been calculated correctly):</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">resp</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">latestsentiment</span> <span class="o">+</span> <span class="s">&quot;?company=&quot;</span> <span class="o">+</span> <span class="nx">company</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-9">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+                <p>ensure good response:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;Error getting latest sentiment from server: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">())</span>
+	<span class="p">}</span>
+	<span class="k">if</span> <span class="nx">resp</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;Unkown error occured getting latest sentiment from server (nil response)&quot;</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="k">if</span> <span class="nx">resp</span><span class="p">.</span><span class="nx">StatusCode</span> <span class="o">!=</span> <span class="mi">200</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;Got unexpected status code while trying to retrieve latest sentiment: &quot;</span> <span class="o">+</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Itoa</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">StatusCode</span><span class="p">))</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-10">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+                <p>decode result:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="kd">var</span> <span class="nx">result</span> <span class="kt">int64</span>
+	<span class="nx">decoder</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewDecoder</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">Body</span><span class="p">)</span>
+	<span class="nx">err</span> <span class="p">=</span> <span class="nx">decoder</span><span class="p">.</span><span class="nx">Decode</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">result</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;Failed to decode latest sentiment query response: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">())</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="nx">result</span><span class="p">,</span> <span class="kc">nil</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-11">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+                <p>getrawSentiments queries the server for the most recent raw sentiments</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">getrawSentiments</span><span class="p">(</span><span class="nx">company</span><span class="p">,</span> <span class="nx">rawSentsIp</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">waketime</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span><span class="p">,</span> <span class="nx">latest</span><span class="p">,</span> <span class="nx">windowSize</span> <span class="kt">int64</span><span class="p">)</span> <span class="p">([][]</span><span class="kt">float64</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-12">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+                <p>get list of new sentiments:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">values</span> <span class="o">:=</span> <span class="nx">url</span><span class="p">.</span><span class="nx">Values</span><span class="p">{}</span>
+	<span class="nx">values</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;company&quot;</span><span class="p">,</span> <span class="nx">company</span><span class="p">)</span>
+	<span class="nx">values</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;before&quot;</span><span class="p">,</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">FormatInt</span><span class="p">(</span><span class="nx">waketime</span><span class="p">.</span><span class="nx">Unix</span><span class="p">(),</span> <span class="mi">10</span><span class="p">))</span>
+	<span class="nx">values</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;after&quot;</span><span class="p">,</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">FormatInt</span><span class="p">(</span><span class="nx">latest</span><span class="o">-</span><span class="nx">windowSize</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span> <span class="c1">//get the data from an hour before last entry (just in case buffer is empty)</span>
+	<span class="nx">resp</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">rawSentsIp</span> <span class="o">+</span> <span class="s">&quot;?&quot;</span> <span class="o">+</span> <span class="nx">values</span><span class="p">.</span><span class="nx">Encode</span><span class="p">())</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-13">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+                <p>ensure good response:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="p">[][]</span><span class="kt">float64</span><span class="p">{},</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;Error occured trying to get rawSentiments: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">())</span>
+	<span class="p">}</span>
+	<span class="k">if</span> <span class="nx">resp</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="p">[][]</span><span class="kt">float64</span><span class="p">{},</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;Unexpected error occured trying to get rawSentiments (nil response)&quot;</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="k">if</span> <span class="nx">resp</span><span class="p">.</span><span class="nx">StatusCode</span> <span class="o">!=</span> <span class="mi">200</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="p">[][]</span><span class="kt">float64</span><span class="p">{},</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;Got unexpected status code while trying to get rawSentiments: &quot;</span> <span class="o">+</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Itoa</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">StatusCode</span><span class="p">))</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-14">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+                <p>decode result:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="kd">var</span> <span class="nx">rawsents</span> <span class="p">[][]</span><span class="kt">float64</span>
+	<span class="nx">decoder</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewDecoder</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">Body</span><span class="p">)</span>
+	<span class="nx">err</span> <span class="p">=</span> <span class="nx">decoder</span><span class="p">.</span><span class="nx">Decode</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">rawsents</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="p">[][]</span><span class="kt">float64</span><span class="p">{},</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;Error occured while trying to parse rawSentiments response: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">())</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="nx">rawsents</span><span class="p">,</span> <span class="kc">nil</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-15">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+                <p>postAverages posts the processed sentiments to the server so they can be added to the db.</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">postAverages</span><span class="p">(</span><span class="nx">company</span><span class="p">,</span> <span class="nx">postAves</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">averages</span> <span class="p">[][]</span><span class="kt">float64</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+	<span class="kd">type</span> <span class="nx">windowAvePayload</span> <span class="kd">struct</span> <span class="p">{</span>
+		<span class="nx">Company</span>  <span class="kt">string</span>    <span class="s">`json:&quot;company&quot;`</span>
+		<span class="nx">Unix</span>     <span class="p">[]</span><span class="kt">int</span>     <span class="s">`json:&quot;unix&quot;`</span>
+		<span class="nx">Averages</span> <span class="p">[]</span><span class="kt">float64</span> <span class="s">`json:&quot;average&quot;`</span>
+	<span class="p">}</span>
+	<span class="nx">data</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">windowAvePayload</span><span class="p">{</span><span class="nx">Company</span><span class="p">:</span> <span class="nx">company</span><span class="p">,</span> <span class="nx">Unix</span><span class="p">:</span> <span class="p">[]</span><span class="kt">int</span><span class="p">{},</span> <span class="nx">Averages</span><span class="p">:</span> <span class="p">[]</span><span class="kt">float64</span><span class="p">{}}</span>
+	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">val</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">averages</span> <span class="p">{</span>
+		<span class="nx">data</span><span class="p">.</span><span class="nx">Unix</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">Unix</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nx">val</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+		<span class="nx">data</span><span class="p">.</span><span class="nx">Averages</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">Averages</span><span class="p">,</span> <span class="nx">val</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+	<span class="p">}</span>
+	<span class="nx">jsonAves</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">Marshal</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span>
+	<span class="nx">req</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">NewRequest</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodPost</span><span class="p">,</span> <span class="nx">postAves</span><span class="p">,</span> <span class="nx">bytes</span><span class="p">.</span><span class="nx">NewBuffer</span><span class="p">(</span><span class="nx">jsonAves</span><span class="p">))</span>
+	<span class="nx">req</span><span class="p">.</span><span class="nx">Header</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="s">&quot;webkey&quot;</span><span class="p">,</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Getenv</span><span class="p">(</span><span class="s">&quot;WEB_KEY&quot;</span><span class="p">))</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;Couldn&#39;t jsonify the averages list when trying to post averages&quot;</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="nx">client</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">http</span><span class="p">.</span><span class="nx">Client</span><span class="p">{}</span>
+	<span class="nx">resp</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">Do</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="o">||</span> <span class="nx">resp</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;Couldn&#39;t post the average sentiments: (either nil response or non-nil error: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">()</span> <span class="o">+</span> <span class="s">&quot;)&quot;</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="k">if</span> <span class="nx">resp</span><span class="p">.</span><span class="nx">StatusCode</span> <span class="o">!=</span> <span class="mi">200</span> <span class="p">{</span>
+		<span class="nx">resp</span><span class="p">.</span><span class="nx">Body</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+		<span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;recieved unexpected status code while trying to post averages: &quot;</span> <span class="o">+</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Itoa</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">StatusCode</span><span class="p">))</span>
+	<span class="p">}</span>
+	<span class="nx">resp</span><span class="p">.</span><span class="nx">Body</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+	<span class="k">return</span> <span class="kc">nil</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-16">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+                <p>handleRealtime handles the reatlime analysis of the raw sentiment data.  It is thread safe for different companies.
+It takes in the company and the list of different endpoints to retreive or post data to.</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">handleRealtime</span><span class="p">(</span><span class="nx">company</span><span class="p">,</span> <span class="nx">postAves</span><span class="p">,</span> <span class="nx">latestsentiment</span><span class="p">,</span> <span class="nx">rawsentiments</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">buffer</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([][]</span><span class="kt">float64</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+	<span class="nx">tries</span> <span class="o">:=</span> <span class="mi">0</span>
+	<span class="k">for</span> <span class="p">{</span>
+		<span class="nx">log</span><span class="p">.</span><span class="nx">Infof</span><span class="p">(</span><span class="s">&quot;[%s]: DOING A SWEEP&quot;</span><span class="p">,</span> <span class="nx">company</span><span class="p">)</span>
+		<span class="nx">waketime</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">()</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-17">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+                <p>get latest sentiment calculated:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="nx">result</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">getLatest</span><span class="p">(</span><span class="nx">company</span><span class="p">,</span> <span class="nx">latestsentiment</span><span class="p">)</span>
+		<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+			<span class="nx">log</span><span class="p">.</span><span class="nx">Error</span><span class="p">(</span><span class="s">&quot;Company: &quot;</span> <span class="o">+</span> <span class="nx">company</span> <span class="o">+</span> <span class="s">&quot;, Try #&quot;</span> <span class="o">+</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Itoa</span><span class="p">(</span><span class="nx">tries</span><span class="p">)</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">())</span>
+			<span class="nx">tries</span><span class="o">++</span>
+			<span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">(</span><span class="nx">tries</span><span class="p">)</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+			<span class="k">continue</span>
+		<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-18">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+                <p>get new unprocessed sentiments:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="nx">rawsents</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">getrawSentiments</span><span class="p">(</span><span class="nx">company</span><span class="p">,</span> <span class="nx">rawsentiments</span><span class="p">,</span> <span class="nx">waketime</span><span class="p">,</span> <span class="nx">result</span><span class="p">,</span> <span class="mi">3600</span><span class="p">)</span>
+		<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+			<span class="nx">log</span><span class="p">.</span><span class="nx">Error</span><span class="p">(</span><span class="s">&quot;Company: &quot;</span> <span class="o">+</span> <span class="nx">company</span> <span class="o">+</span> <span class="s">&quot;, Try #&quot;</span> <span class="o">+</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Itoa</span><span class="p">(</span><span class="nx">tries</span><span class="p">)</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">())</span>
+			<span class="nx">tries</span><span class="o">++</span>
+			<span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">(</span><span class="nx">tries</span><span class="p">)</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+			<span class="k">continue</span>
+		<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-19">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+                <p>if we already have things in the buffer, ensure rawsents has no repeats and each element has the expected size of 3 (Unix, Sentiment, TweetID)</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nx">buffer</span><span class="p">)</span> <span class="p">&gt;</span> <span class="mi">0</span> <span class="p">{</span>
+			<span class="k">for</span> <span class="nx">ind</span><span class="p">,</span> <span class="nx">point</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">rawsents</span> <span class="p">{</span>
+				<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nx">point</span><span class="p">)</span> <span class="p">&lt;</span> <span class="mi">3</span> <span class="o">||</span> <span class="nx">point</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="nx">buffer</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="p">{</span>
+					<span class="nx">rawsents</span> <span class="p">=</span> <span class="nx">rawsents</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="nx">ind</span><span class="p">]</span> <span class="c1">//since rawsents is garaunteed to be in descending order</span>
+					<span class="k">break</span>
+				<span class="p">}</span>
+			<span class="p">}</span>
+		<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-20">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+                <p>prepend results to buffer: (so that buffer always remains in descending order)</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="nx">buffer</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">rawsents</span><span class="p">,</span> <span class="nx">buffer</span><span class="o">...</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-21">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+                <p>calculate and fill in averages needed: (uses result+60 (the next unix timestamp to calculate) as the front)</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="nx">averages</span> <span class="o">:=</span> <span class="nx">windowSmoothing</span><span class="p">(</span><span class="nx">buffer</span><span class="p">,</span> <span class="nx">result</span><span class="o">+</span><span class="mi">60</span><span class="p">,</span> <span class="mi">3600</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-22">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+                <p>if we got no tweets back, proceed like normal</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nx">averages</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+			<span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Minute</span><span class="p">)</span>
+			<span class="k">continue</span>
+		<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-23">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+                <p>post resulting calculations to server:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="nx">err</span> <span class="p">=</span> <span class="nx">postAverages</span><span class="p">(</span><span class="nx">company</span><span class="p">,</span> <span class="nx">postAves</span><span class="p">,</span> <span class="nx">averages</span><span class="p">)</span>
+		<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+			<span class="nx">log</span><span class="p">.</span><span class="nx">Error</span><span class="p">(</span><span class="s">&quot;Company: &quot;</span> <span class="o">+</span> <span class="nx">company</span> <span class="o">+</span> <span class="s">&quot;, Try #&quot;</span> <span class="o">+</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Itoa</span><span class="p">(</span><span class="nx">tries</span><span class="p">)</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">())</span>
+			<span class="nx">tries</span><span class="o">++</span>
+			<span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">(</span><span class="nx">tries</span><span class="p">)</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+			<span class="k">continue</span>
+		<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-24">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+                <p>clean up end of buffer if need be:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="k">for</span> <span class="nx">ind</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">ind</span> <span class="p">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="nx">buffer</span><span class="p">);</span> <span class="nx">ind</span><span class="o">++</span> <span class="p">{</span>
+			<span class="k">if</span> <span class="nx">averages</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="nx">buffer</span><span class="p">[</span><span class="nx">ind</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="p">&gt;</span> <span class="mi">3600</span> <span class="p">{</span>
+				<span class="nx">buffer</span> <span class="p">=</span> <span class="nx">buffer</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="nx">ind</span><span class="p">]</span>
+				<span class="k">break</span>
+			<span class="p">}</span>
+		<span class="p">}</span>
+		<span class="nx">log</span><span class="p">.</span><span class="nx">Infof</span><span class="p">(</span><span class="s">&quot;[%s]: FINISHED MY SWEEP&quot;</span><span class="p">,</span> <span class="nx">company</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-25">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+                <p>sleep for 2 minutes:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Minute</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-26">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+                <p>reset tries to 3:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="k">if</span> <span class="nx">tries</span> <span class="p">&gt;</span> <span class="mi">3</span> <span class="p">{</span>
+			<span class="nx">tries</span> <span class="p">=</span> <span class="mi">3</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-27">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+                <p>main queries the server for a list of companies and then starts up the realtime analysis of each company&rsquo;s raw sentiments.</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Infoln</span><span class="p">(</span><span class="s">&quot;Gratiously waiting until other microservices become operational...&quot;</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-28">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+                <p>From <a href="https://play.golang.org/">https://play.golang.org/</a>
+Clear the screen by printing \x0c.</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="kd">const</span> <span class="nx">col</span> <span class="p">=</span> <span class="mi">30</span>
+	<span class="nx">bar</span> <span class="o">:=</span> <span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">&quot;\x0c[%%-%vs]&quot;</span><span class="p">,</span> <span class="nx">col</span><span class="p">)</span>
+	<span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nx">col</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+		<span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="nx">bar</span><span class="p">,</span> <span class="nx">strings</span><span class="p">.</span><span class="nx">Repeat</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span><span class="o">+</span><span class="s">&quot;&gt;&quot;</span><span class="p">)</span>
+		<span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="nx">bar</span><span class="o">+</span><span class="s">&quot; Done!&quot;</span><span class="p">,</span> <span class="nx">strings</span><span class="p">.</span><span class="nx">Repeat</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">,</span> <span class="nx">col</span><span class="p">))</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-29">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+                <p>Get all companies in the system</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">resp</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">companiesVals</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nb">panic</span><span class="p">(</span><span class="s">&quot;Failed to receive initial companies: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">())</span>
+	<span class="p">}</span>
+	<span class="nx">companies</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">string</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+	<span class="nx">decoder</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewDecoder</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">Body</span><span class="p">)</span>
+	<span class="nx">err</span> <span class="p">=</span> <span class="nx">decoder</span><span class="p">.</span><span class="nx">Decode</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">companies</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nb">panic</span><span class="p">(</span><span class="s">&quot;Failed to decode initial companies: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">())</span>
+	<span class="p">}</span>
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Received the following companies:&quot;</span><span class="p">,</span> <span class="nx">companies</span><span class="p">)</span>
+	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">company</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">companies</span> <span class="p">{</span>
+		<span class="nx">log</span><span class="p">.</span><span class="nx">Infof</span><span class="p">(</span><span class="s">&quot;Starting goroutine for %s&quot;</span><span class="p">,</span> <span class="nx">company</span><span class="p">)</span>
+		<span class="k">go</span> <span class="nx">handleRealtime</span><span class="p">(</span><span class="nx">company</span><span class="p">,</span> <span class="nx">globpostAves</span><span class="p">,</span> <span class="nx">globlatestsentiment</span><span class="p">,</span> <span class="nx">globrawsentiments</span><span class="p">)</span>
+	<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-30">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+                <p>The stop signal channel</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">c</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Signal</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-31">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+                <p>We&rsquo;ll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
+SIGKILL, SIGQUIT or SIGTERM (Ctrl+/) will not be caught.</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">signal</span><span class="p">.</span><span class="nx">Notify</span><span class="p">(</span><span class="nx">c</span><span class="p">,</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Interrupt</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-32">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+                <p>Block until we receive our signal.</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="o">&lt;-</span><span class="nx">c</span>
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;shutting down&quot;</span><span class="p">)</span>
+	<span class="nx">os</span><span class="p">.</span><span class="nx">Exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="p">}</span>
+
+</pre></div>
+            </td>
+          </tr>
+          
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

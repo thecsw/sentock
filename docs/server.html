@@ -1,0 +1,263 @@
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>server.go</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="gocco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <div id="jump_to">
+        Jump To &hellip;
+        <div id="jump_wrapper">
+          <div id="jump_page">
+              
+              <a class="source" href="admin.html">
+                  admin.go
+              </a>
+              
+              <a class="source" href="elephant.html">
+                  elephant.go
+              </a>
+              
+              <a class="source" href="elephant_test.html">
+                  elephant_test.go
+              </a>
+              
+              <a class="source" href="models.html">
+                  models.go
+              </a>
+              
+              <a class="source" href="sentiments.html">
+                  sentiments.go
+              </a>
+              
+              <a class="source" href="server.html">
+                  server.go
+              </a>
+              
+              <a class="source" href="vars.html">
+                  vars.go
+              </a>
+              
+          </div>
+        </div>
+      </div>
+    
+    <table cellpadding="0" cellspacing="0">
+      <thead>
+        <tr>
+          <th class="docs">
+            <h1>
+                server.go
+            </h1>
+          </th>
+          <th class="code">
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+          
+          <tr id="section-1">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+                
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span></span><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+	<span class="s">&quot;encoding/json&quot;</span>
+	<span class="s">&quot;net/http&quot;</span>
+	<span class="s">&quot;time&quot;</span>
+
+	<span class="s">&quot;github.com/gorilla/mux&quot;</span>
+	<span class="nx">log</span> <span class="s">&quot;github.com/sirupsen/logrus&quot;</span>
+<span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-2">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+                <p>hello is a simple endpoint that returns the message &ldquo;hello, world&rdquo;</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">hello</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span>
+	<span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">webError</span><span class="p">{</span><span class="nx">Msg</span><span class="p">:</span> <span class="s">&quot;hello, world&quot;</span><span class="p">})</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-3">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+                <p>bobby is a method that deletes all entries in the raw sentiments table of
+the db that are older than 24 hours.  It cleans them up every hour.</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">bobby</span><span class="p">()</span> <span class="p">{</span>
+	<span class="k">for</span> <span class="p">{</span>
+		<span class="nx">log</span><span class="p">.</span><span class="nx">Infoln</span><span class="p">(</span><span class="s">&quot;deleting raw sentiments... (anything from before 24 hours ago)&quot;</span><span class="p">)</span>
+		<span class="nx">err</span> <span class="o">:=</span> <span class="nx">Elephant</span><span class="p">.</span><span class="nx">deleteOldRaws</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">().</span><span class="nx">UTC</span><span class="p">().</span><span class="nx">Add</span><span class="p">(</span><span class="o">-</span><span class="mi">24</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Hour</span><span class="p">).</span><span class="nx">Unix</span><span class="p">())</span>
+		<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+			<span class="nx">log</span><span class="p">.</span><span class="nx">Infoln</span><span class="p">(</span><span class="s">&quot;Problem deleting raw sentiments: &quot;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">())</span>
+		<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-4">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+                <p>sleep for an hour:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>		<span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Hour</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-5">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+                <p>main is the entrypoint. It initializes a postgres (DB) connection
+through Elephant and deploys a web server</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Infof</span><span class="p">(</span><span class="s">&quot;Gratiously waiting until other microservices become operational...&quot;</span><span class="p">)</span>
+	<span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Infoln</span><span class="p">(</span><span class="s">&quot;[DONE]&quot;</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-6">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+                <p>Connecting to the DB</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">log</span><span class="p">.</span><span class="nx">Infof</span><span class="p">(</span><span class="s">&quot;Connecting to the DB... &quot;</span><span class="p">)</span>
+	<span class="kd">var</span> <span class="nx">err</span> <span class="kt">error</span>
+	<span class="nx">db</span><span class="p">,</span> <span class="nx">err</span> <span class="p">=</span> <span class="nx">Elephant</span><span class="p">.</span><span class="nx">connectDB</span><span class="p">(</span><span class="nx">connectionString</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Infoln</span><span class="p">(</span><span class="s">&quot;[DONE]&quot;</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-7">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+                <p>Adding new tables</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">log</span><span class="p">.</span><span class="nx">Infof</span><span class="p">(</span><span class="s">&quot;Migrating tables... &quot;</span><span class="p">)</span>
+	<span class="nx">err</span> <span class="p">=</span> <span class="nx">Elephant</span><span class="p">.</span><span class="nx">autoMigrate</span><span class="p">()</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Infoln</span><span class="p">(</span><span class="s">&quot;[DONE]&quot;</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-8">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+                <p>launch goroutine to clean up old raw sentiments
+GO BOBBY! YOU CAN DO IT
+I BELIEVE IN YOU BOBBY
+YOUR FAMILY IS PROUD BOBBY
+GO GET&rsquo;EMT TIGER
+&hellip;
+and bobby dropped tables
+relevant:</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="k">go</span> <span class="nx">bobby</span><span class="p">()</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-9">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+                <p>Create new router</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">log</span><span class="p">.</span><span class="nx">Infof</span><span class="p">(</span><span class="s">&quot;Creating our HTTP router... &quot;</span><span class="p">)</span>
+	<span class="nx">myRouter</span> <span class="o">:=</span> <span class="nx">mux</span><span class="p">.</span><span class="nx">NewRouter</span><span class="p">()</span>
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Infoln</span><span class="p">(</span><span class="s">&quot;[DONE]&quot;</span><span class="p">)</span>
+
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Infof</span><span class="p">(</span><span class="s">&quot;Adding authorization middleware... &quot;</span><span class="p">)</span>
+	<span class="nx">myRouter</span><span class="p">.</span><span class="nx">Use</span><span class="p">(</span><span class="nx">authMiddleware</span><span class="p">)</span>
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Infoln</span><span class="p">(</span><span class="s">&quot;[DONE]&quot;</span><span class="p">)</span>
+
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Infof</span><span class="p">(</span><span class="s">&quot;Adding HTTP routes... &quot;</span><span class="p">)</span>
+	<span class="nx">myRouter</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span> <span class="nx">hello</span><span class="p">).</span><span class="nx">Methods</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodGet</span><span class="p">)</span>
+	<span class="nx">myRouter</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">&quot;/companies&quot;</span><span class="p">,</span> <span class="nx">getCompanies</span><span class="p">).</span><span class="nx">Methods</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodGet</span><span class="p">)</span>
+	<span class="nx">myRouter</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">&quot;/sentiments&quot;</span><span class="p">,</span> <span class="nx">getSentiments</span><span class="p">).</span><span class="nx">Methods</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodGet</span><span class="p">)</span>
+	<span class="nx">myRouter</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">&quot;/sentiments&quot;</span><span class="p">,</span> <span class="nx">addRawSentiment</span><span class="p">).</span><span class="nx">Methods</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodPost</span><span class="p">)</span>
+	<span class="nx">myRouter</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">&quot;/sentiments/raw&quot;</span><span class="p">,</span> <span class="nx">getRawSentiments</span><span class="p">).</span><span class="nx">Methods</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodGet</span><span class="p">)</span>
+	<span class="nx">myRouter</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">&quot;/sentiments/latest&quot;</span><span class="p">,</span> <span class="nx">getLatestSentiment</span><span class="p">).</span><span class="nx">Methods</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodGet</span><span class="p">)</span>
+	<span class="nx">myRouter</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">&quot;/sentiments/market&quot;</span><span class="p">,</span> <span class="nx">getMarketSentiments</span><span class="p">).</span><span class="nx">Methods</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodGet</span><span class="p">)</span>
+	<span class="nx">myRouter</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">&quot;/sentiments/averages&quot;</span><span class="p">,</span> <span class="nx">addWindowAverages</span><span class="p">).</span><span class="nx">Methods</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">MethodPost</span><span class="p">)</span>
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Infoln</span><span class="p">(</span><span class="s">&quot;[DONE]&quot;</span><span class="p">)</span></pre></div>
+            </td>
+          </tr>
+          
+          <tr id="section-10">
+            <td class="docs">
+              <div class="pilwrap">
+                  <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+                <p>start listening</p>
+
+            </td>
+            <td class="code">
+                <div class="highlight"><pre>	<span class="nx">listenAddr</span> <span class="o">:=</span> <span class="s">&quot;0.0.0.0:10000&quot;</span>
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Infof</span><span class="p">(</span><span class="s">&quot;Listening on %s... &quot;</span><span class="p">,</span> <span class="nx">listenAddr</span><span class="p">)</span>
+	<span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="nx">listenAddr</span><span class="p">,</span> <span class="nx">myRouter</span><span class="p">))</span>
+<span class="p">}</span>
+
+</pre></div>
+            </td>
+          </tr>
+          
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
