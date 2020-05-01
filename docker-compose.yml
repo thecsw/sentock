@@ -7,7 +7,7 @@ services:
           - 5432:5432 #127.0.0.1:
         restart: unless-stopped
         volumes:
-          - /data/sentocks/postgres:/var/lib/postgres/data
+          - ./data/sentocks/postgres:/var/lib/postgres/data
 
     caddy:
         build: ./webpage
@@ -21,16 +21,18 @@ services:
           - postgres
           - server
         volumes:
-          - "/data/sentocks/caddy/data:/root/.caddy"
-          - "/data/sentocks/caddy/logs:/var/log"
-          - "./webpage/front:/srv"
-
+          - "./data/sentocks/caddy/data:/root/.caddy"
+          - "./data/sentocks/caddy/logs:/var/log"
+            #- "./webpage/front:/srv"
+          - "docs:/srv/docs"
     twippy:
         build: ./twippy
         env_file: .env
         restart: "always"
         depends_on:
           - server
+        volumes:
+          - docs:/docs
 
     tokentest:
         build: ./twippy
@@ -45,6 +47,15 @@ services:
           - 127.0.0.1:10000:10000
         depends_on:
           - postgres
+        command: ./server
+
+    server_docs:
+        build: ./server
+        ports:
+          - 6060:6060
+        depends_on:
+          - server
+        command: godoc -http=:6060
 
     josh:
         build: ./josh
@@ -52,3 +63,15 @@ services:
         restart: "always"
         depends_on:
           - server
+        command: ./josh
+
+    josh_docs:
+        build: ./josh
+        depends_on:
+          - josh
+        ports:
+          - 6061:6061
+        command: godoc -http=:6061
+
+volumes:
+  docs:
