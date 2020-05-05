@@ -89,6 +89,7 @@ This project wouldn't be what it is without building upon the works of many othe
 - [Gorm](https://gorm.io/) - an ORM library for Golang
 - [gorilla/mux](https://github.com/gorilla/mux) - http router and URl matcher for Golang
 - [logrus](https://github.com/Sirupsen/logrus) - a Golang logging tool
+- [testify](https://github.com/stretchr/testify) - a Golang testing tool
 - [Vue.js](https://vuejs.org/) - a Javascript framework
 - [Chart.js](https://www.chartjs.org/) - A Javascript chart making library
 - [Materialize](https://materializecss.com/) - A front-end design framework (Javascript/css)
